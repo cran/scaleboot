@@ -1,0 +1,59 @@
+### options.R
+export(sbmodelnames,sboptions)
+
+### sbfit.R
+S3method("[",scalebootv)
+export(sbfit)
+S3method(sbfit, scaleboot)
+S3method(sbfit, scalebootv)
+S3method(sbfit, default)
+S3method(sbfit, matrix)
+S3method(sbfit, data.frame)
+export(sbaic,"sbaic<-")
+S3method(sbaic, scaleboot)
+S3method(sbaic, scalebootv)
+S3method("sbaic<-", scaleboot)
+S3method("sbaic<-", scalebootv)
+S3method(coef,scaleboot)
+S3method(coef,scalebootv)
+S3method(print,scaleboot)
+S3method(print,scalebootv)
+
+### summary.R
+S3method("[",summary.scalebootv)
+S3method(summary,scaleboot)
+S3method(print,summary.scaleboot)
+S3method(summary,scalebootv)
+S3method(print,summary.scalebootv)
+export(sbpval)
+S3method(sbpval,summary.scaleboot)
+S3method(sbpval,summary.scalebootv)
+
+### plot.R
+S3method(plot,scaleboot)
+S3method(lines,scaleboot)
+S3method(plot,scalebootv)
+export(sblegend)
+
+### models.R
+export(sbpsi.poly)
+export(sbpsi.sing)
+
+### sbconf.R
+export(sbconf)
+S3method(sbconf, default)
+S3method(sbconf, sbconf)
+S3method(print, sbconf)
+S3method(plot, sbconf)
+
+### relltest.R
+export(scaleboot)
+export(countw.assmax,countw.shtest,countw.shtestass)
+export(relltest)
+S3method("[",relltest)
+S3method(print,relltest)
+
+### interface.R
+S3method(sbfit, pvclust)
+export(sbpvclust)
+export(read.mt,read.ass,read.cnt)
