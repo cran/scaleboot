@@ -60,6 +60,7 @@ AIC value by \code{sbaic} function. We also diagnose the fitting by the
   \item{best}{ a list consisting of components \code{model} for the best
   fitting model name, \code{aic} for its AIC value, \code{pv} for a
   vector of p-values, and \code{pe} for a vector of standard errors.}
+  \item{parex}{a list of components \code{k}, \code{s}, and \code{sp}.}
 }
 \author{Hidetoshi Shimodaira}
 \seealso{\code{\link{sbfit}}, \code{\link{sbpsi}}, \code{\link{sbpval}},

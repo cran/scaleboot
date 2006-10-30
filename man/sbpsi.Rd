@@ -2,6 +2,8 @@
 \alias{sbpsi}
 \alias{sbpsi.poly}
 \alias{sbpsi.sing}
+\alias{sbpsi.sphe}
+\alias{sbpsi.generic}
 \alias{sbmodelnames}
 \title{Model Specification Functions}
 \description{
@@ -14,7 +16,12 @@ sbpsi.poly(beta,s=1,k=1,sp=-1,aux=NULL,check=FALSE)
 
 sbpsi.sing(beta,s=1,k=1,sp=-1,aux=NULL,check=FALSE)
 
-sbmodelnames(m=3,poly=m,sing=m)
+sbpsi.sphe(beta,s=1,k=1,sp=-1,aux=NULL,check=FALSE)
+
+sbpsi.generic(beta,s=1,k=1,sp=-1,aux=NULL,check=FALSE,zfun,eps=0.01)
+
+sbmodelnames(m=3,poly=m,sing=m,sphe=0)
+
 }
 \arguments{
   \item{beta}{numeric vector of parameters;
@@ -27,9 +34,12 @@ sbmodelnames(m=3,poly=m,sing=m)
   \item{sp}{\eqn{\sigma_p^2}.}
   \item{aux}{auxiliary parameter. Currently, not used.}
   \item{check}{logical for boundary check.}
+  \item{zfun}{z-value function with (s,beta) as parameters.}
+  \item{eps}{delta for numerical computation of derivatives.}
   \item{m}{numeric to specify the maximum number of parameters.}
   \item{poly}{maximum number of parameters in poly models.}
   \item{sing}{maximum number of parameters in sing models.}
+  \item{sphe}{maximum number of parameters in sphe models.}
 }
 \details{
   For \eqn{k=1}, \code{sbpsi} functions return their \eqn{psi} function
@@ -43,6 +53,10 @@ sbmodelnames(m=3,poly=m,sing=m)
     \sum_{j=1}^{m-2} \beta_j \sigma^{2j} (1+a)/(1+a \sigma),}
   where \eqn{a=\beta_{m-1}/(1-\beta_{m-1})} so that \eqn{0\le a \le
     \infty} for \eqn{0\le\beta_{m-1}\le1}.
+  \code{sbpsi.sphe} defines the spherical model; currently the number of
+  parameters must be 3.
+  \code{sbpsi.generic} is to calculate psi value and extrapolation from
+  a given z-function.
 
   For \eqn{k>1}, \code{sbpsi} functions return values extrapolated at
   \eqn{\sigma^2=\sigma_p^2} using derivatives up to order \eqn{k-1}
@@ -54,8 +68,8 @@ sbmodelnames(m=3,poly=m,sing=m)
 \value{
   \code{sbpsi.poly} and \code{sbpsi.sing} are examples of a sbpsi
   function; users can develop their own sbpsi functions for better
-  model fitting by preparing \code{sbpsi.xxx} and \code{sbini.xxx}
-  functions for model \code{xxx}.
+  model fitting by preparing \code{sbpsi.foo} and \code{sbini.foo}
+  functions for model \code{foo}.
   If check=FALSE, a sbpsi function returns
   the \eqn{\psi} function value or the extrapolation value.
   If check=TRUE, a sbpsi function returns NULL when all

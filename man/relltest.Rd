@@ -9,7 +9,7 @@
 }
 \usage{
 
-relltest(dat,nb=10000,sa=10^seq(-2,2,length=13),ass=NULL,
+relltest(dat,nb=10000,sa=9^seq(-1,1,length=13),ass=NULL,
          cluster=NULL,nofit=FALSE,models=NULL,seed=100)
 
 }
@@ -78,8 +78,8 @@ relltest(dat,nb=10000,sa=10^seq(-2,2,length=13),ass=NULL,
 
   Shimodaira, H. and Hasegawa, M. (2001). CONSEL: for assessing the
   confidence of phylogenetic tree selection, \emph{Bioinformatics}, 17,
-  1246-1247; available from
-  \url{http://www.is.titech.ac.jp/~shimo/prog/consel/}.
+  1246-1247 (software is available from
+  \url{http://www.is.titech.ac.jp/~shimo/prog/consel/}).
 
   Luke Tierney, A. J. Rossini, Na Li and H. Sevcikova. snow: Simple
   Network of Workstations. R package version 0.2-1.

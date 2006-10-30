@@ -41,7 +41,7 @@ sbfit(x, ...)
   \item{models}{character vector of model names. Valid model names are
     \code{poly.m} for m>=1 and \code{sing.m} for
     m>=3. The default is set by \code{sboptions()$models}, whose
-    default is c("poly.1","poly.2","poly.3","sing.3").
+    default is c("poly.1","poly.2","poly.3","sing.3","sphe.3").
     If \code{models} is an integer value, \code{sbmodelnames(m=models)} is
     used.}
   \item{nofit}{logical. If TRUE, fitting is not performed.}
@@ -144,12 +144,17 @@ sbfit(x, ...)
   \code{\link{plot.scaleboot}}, \code{\link{coef.scaleboot}},
   \code{\link{sbaic}}.}
 \examples{
-## see also examples in data(mam15)
-## the following bp, nb, sa are those from data(mam15)
-
 ## Testing a hypothesis
 ## Examples of fitting models to a vector of bp's
-## mam15.relltest$t4
+## mam15.relltest$t4 of data(mam15), but
+## using a different set of scales (sigma^2 values).
+## In the below, sigma^2 ranges 0.01 to 100 in sa[i]
+## This very large range is only for illustration.
+## Typically, the range around 0.1 to 10
+## is recommended for much better model fitting.
+## In other examples, we have used
+## sa = 9^seq(-1,1,length=13).
+
 cnt <- c(0,0,0,0,6,220,1464,3565,5430,6477,6754,
          6687,5961) # observed frequencies at scales
 nb <- 100000 # number of replicates at each scale
@@ -158,13 +163,13 @@ sa <- 10^seq(-2,2,length=13) # scales (sigma squared)
 ## model fitting to bp's 
 f <- sbfit(bp,nb,sa) # model fitting ("scaleboot" object)
 f # print the result of fitting
-sblegend("topleft",z=plot(f)) # observed bp's and fitted curves
+plot(f,legend="topleft") # observed bp's and fitted curves
 ## approximately unbiased p-values
 summary(f) # calculate and print p-values
 ## refitting with models up to "poly.4" and "sing.4"
 f <- sbfit(f,models=4)
 f # print the result of fitting
-sblegend("topleft",z=plot(f)) # observed bp's and fitted curves
+plot(f,legend="topleft") # observed bp's and fitted curves
 summary(f) # calculate and print p-values
 
 ## Testing multiple hypotheses (only two here)

@@ -7,7 +7,8 @@
 \title{Bootstrap Confidence Intervals}
 \description{
   A confidence interval for a scalar parameter is obtained by inverting
-  the approximately unbiased p-value.
+  the approximately unbiased p-value. This function is very slow,
+  and it is currently experimental.
 }
 \usage{
 sbconf(x, ...)

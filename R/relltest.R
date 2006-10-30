@@ -92,7 +92,6 @@ scaleboot <- function(dat,nb,sa,fun,parm=NULL,count=TRUE,weight=TRUE,cluster=NUL
     }
     ## end of parallel cpu's ##
   }
-  
   ## return value
   if(count) {
     cnt <- asmat(simplist(z))
@@ -142,7 +141,7 @@ scaleboot.node <- function(dat,nb,nsizes,fun,parm,count,weight) {
   z
 }
 
-### examples for "fun" in sbsample.node
+### examples for "fun" in scaleboot.node
 ## calculate test statistics for selection problem
 ## via the RELL resamling method
 ##
@@ -219,7 +218,7 @@ sbextpv <- function(x,i) {
 ## ass: association list (produced by read.ass)
 ## cluster: for parallel computing (snow package)
 
-relltest <- function(dat,nb=10000,sa=10^seq(-2,2,length=13),
+relltest <- function(dat,nb=10000,sa=9^seq(-1,1,length=13),
                      ass=NULL,cluster=NULL,nofit=FALSE,models=NULL,
                      seed=100){
 

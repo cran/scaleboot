@@ -316,6 +316,114 @@ sbsingd <- function(x,i,j) {
 }
 
 
+### psi function for spherical model
+## model name convention: sphe.3
+##
+## beta : parameter vector
+## beta[1] = v
+## beta[2] = logsx(1/a) for the region = {y : ||y||<a}
+## beta[3] = log(nu) where nu=degrees of freedom
+##
+## s : s = sigma^2 (default: s=1)
+## k : use derivatives up to k-1 (default: k=1)
+## if(k==0) then, returns z-value of chisq p-value
+## sp : prediction for s=sp (default: sp=-1)
+## aux : ignored
+## check : check if beta is at boundary
+##
+## output:
+## psi(s) = sqrt(s)*qnorm(1-bp)
+## sum_{j=0}^{k-1} ((sp-s)^j/j!) * (d^j psi(s)/d s^j)
+##
+
+## parameter conversion
+parsphere <- function(beta) {
+  if(length(beta)!=3) stop("length(beta) must = 3")
+  v <- beta[1]
+  a <- 1/expsx(beta[2])
+  nu <- exp(beta[3])
+  return(c(v,a,nu))
+}
+
+## psi function
+sbpsi.sphe <- function(beta,s=1,k=1,sp=-1,aux=NULL,check=FALSE) {
+  if(check) {
+    x <- beta[3]
+    if(x <= 0.01) x <- 0
+    else return(NULL)
+    ## if there is a change...
+    beta[3] <- x
+    return(list(beta=beta,mask=c(T,T,F)))
+  }
+  p <- parsphere(beta)
+  if(k==0) { ## speical case: chisq p-value
+    zval <- zsphere(p[1],p[2],p[3],1,1,au=TRUE)
+    return(zval)
+  }
+  s0 <- s
+  mypsi <- function(s) sqrt(s)*zsphere(p[1],p[2],p[3],s,s0)
+  y <- mypsi(s)
+
+  k <- round(k)
+  w <- 1
+  if(k >= 2) {
+    for(j in 1:(k-1)) {
+      w <- w * (sp-s) / j
+      d <- nderiv(mypsi,s,j)
+      y <- y + w*d
+    }
+  }
+  y
+}
+
+
+## internal function
+## calculate z-value for spherical model
+## v = signed distance
+## a = radius of hypothesis
+## s = sigma^2
+## s0 = s for reference (to switch chisq or norm approx)
+## au: for p-value calculation
+zsphere <- function(v,a,nu,s,s0=s,au=FALSE) {
+  b <- sign(a)*abs(a+v)
+  if(au) { a1 <- a; a <- -b; b <- -a1; v <- -v }
+  if(a<0) { v <- -v; a <- -a; b <- -b; lowtail <- FALSE }
+  else lowtail <- TRUE
+  c <- (nu-1)/(a+b)
+  if(b^2/s0 < 1e5) {
+    p <- pchisq(a^2/s,nu,b^2/s,lower.tail=lowtail)
+    if(p>1.0) p <- 1.0
+    z <- -qnorm(p)    
+#    if(p<0.99) z <- -qnorm(p)
+#    else z <- qnorm(pchisq(a^2/s,nu,b^2/s,lower.tail=!lowtail))
+  } else {
+    sigma <- sqrt(s)
+    z <- v/sigma + c*sigma
+  }
+  
+  return(z[[1]])
+}
+
+## generic psi function
+## zfun(s,beta)
+sbpsi.generic <- function(beta,s=1,k=1,sp=-1,aux=NULL,check=FALSE,zfun,eps=0.01) {
+  if(check) return(NULL)
+  mypsi <- function(s) sqrt(s)*zfun(s,beta)
+  y <- mypsi(s)
+
+  k <- round(k)
+  w <- 1
+  if(k >= 2) {
+    for(j in 1:(k-1)) {
+      w <- w * (sp-s) / j
+      d <- nderiv(mypsi,s,j,eps)
+      y <- y + w*d
+    }
+  }
+  y
+}
+
+
 ######################################################################
 ### INTERNAL: MODEL INITIAL VALUES
 
@@ -411,4 +519,30 @@ sbini.sing <- function(size,x,y,aux=NULL) {
   list(inits=inits,mag=mag)
 }
 
+
+### initial value for spherical model
+##
+## size : parameter size
+## x : sbfit parameters
+## y : sbfit fits
+sbini.sphe <- function(size,x,y,aux=NULL) {
+  if(size != 3) stop("size must = 3")
+  par <- rep(0,size)
+  names(par) <- paste("beta",0:(size-1),sep="")
+  inits <- as.matrix(par)
+
+  ## set mag
+  mag <-  sboptions("mag.sphe")
+
+  ## find "poly.2" model
+  par1 <- sbprevini(2,y,
+      function(z,size) z$base == "poly" & z$size == size)
+  v1 <- par1[1] # signed distance (beta0)
+  c1 <- par1[2] # curvature term (beta1)
+  nu1 <- 2
+  inits <- cbind(inits,
+                 c(v1,logsx(2*c1/(nu1-1)),log(nu1))/mag)
+
+  list(inits=inits,mag=mag)
+}
 

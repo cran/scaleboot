@@ -70,6 +70,16 @@ summary.scaleboot <- function(object,models=names(object$fi),
   object$pv <- pv
   object$pe <- pe
 
+  ## save parameters for extrapolation
+  object$parex <- list(k=k,s=s,sp=sp)
+  names(object$parex$k) <- pvnames
+
+  ## chisq p-value
+  if(!is.null(f <- object$fi$sphe.3)) {
+    y <- sbpv1(f,get(f$psi),k=0,s=s,sp=sp)
+    object$chisq <- y
+  }
+
   ## find the best model
   aic <- sapply(object$fi,"[[","aic")
   aic0 <- min(aic)
@@ -95,6 +105,17 @@ print.summary.scaleboot <- function(x,...) {
   if(is.null(x$fi)) {
     cat("\nNo Model Fitting\n")
     return(invisible(x))
+  }
+
+  ## chisq
+  if(!is.null(x$chisq)) {
+    a <- catpval(x$chisq$pv,x$chisq$pe)
+    cat("\nChisquare P-value: ",a$value)
+    f <- x$fi$sphe.3
+    p <- parsphere(f$par*f$mag)
+    cat(" ; v=",format(p[1],digits=3),
+        ", a=",format(p[2],digits=3),
+        ", nu=",format(p[3],digits=3),"\n",sep="")
   }
   
   ## corrected p-values
@@ -132,15 +153,24 @@ print.summary.scalebootv <- function(x,...) {
   pvalues <- attr(x,"pvalues")
   bests <- lapply(x,"[[","best")
   raws <- lapply(x,"[[","raw")
+  chisqs <- lapply(x,"[[","chisq")
+  nochisq <- all(sapply(chisqs,is.null))
 
   ## best model
-  out <- matrix("",length(x),3+length(pvalues),
-              dimnames=list(names(x),c("raw",pvalues,"model","aic")))
+  out <- matrix("",length(x),3+length(pvalues)+!nochisq,
+              dimnames=list(names(x),c("raw",pvalues,if(nochisq) NULL else "chisq",
+                "model","aic")))
   out[,"model"] <- format(sapply(bests,"[[","model"))
   out[,"aic"] <- format(round(sapply(bests,"[[","aic"),digits=2))
   pv <- sapply(raws,"[[","pv")
   pe <- sapply(raws,"[[","pe")
   out[,"raw"] <- catpval(pv,pe)$value
+  if(!nochisq) {
+    chisqs <- lapply(chisqs,function(a) if(is.null(a)) list(pv=NA,pe=NA) else a)
+    pv <- sapply(chisqs,"[[","pv")
+    pe <- sapply(chisqs,"[[","pe")
+    out[,"chisq"] <- catpval(pv,pe)$value
+  }
   for(p in pvalues) {
     pv <- sapply(bests,function(b) b$pv[[p]])
     pe <- sapply(bests,function(b) b$pe[[p]])

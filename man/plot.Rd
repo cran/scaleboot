@@ -1,24 +1,36 @@
 \name{plot.scaleboot}
 \alias{plot.scaleboot}
+\alias{plot.summary.scaleboot}
 \alias{lines.scaleboot}
 \alias{sblegend}
 \alias{plot.scalebootv}
+\alias{plot.summary.scalebootv}
 \title{Plot Diagnostics for Multiscale Bootstrap}
 \description{
   \code{plot} method for class \code{"scaleboot"}.
 }
 \usage{
 
-\method{plot}{scaleboot}(x, models = names(x$fi), xval = c("inverse","sigma","square"),
-     yval = c("zvalue", "pvalue", "psi"), xlab = NULL,
+\method{plot}{scaleboot}(x, models = names(x$fi),
+     k=NULL, s=NULL, sp=NULL, xval = c("square", "inverse","sigma"),
+     yval = c("psi", "zvalue", "pvalue"), xlab = NULL,
      ylab = NULL,log.xy = "", xlim = NULL, ylim = NULL,
-     add = F, length.x = 300, col =1:6, lty = 1:5, lwd = par("lwd"),
-     pch = 1, cex = 1, pt.col = col[1],pt.lwd = lwd[1], ...)
+     add = F, length.x = 300, main=NULL,
+     col =1:6, lty = 1:5, lwd = par("lwd"), ex.pch=2:7,
+     pch = 1, cex = 1, pt.col = col[1],pt.lwd = lwd[1],
+     legend.x = NULL, inset = 0.1, ...)
+
+\method{plot}{summary.scaleboot}(x, models="best",
+     k=x$parex$k,s=x$parex$s,sp=x$parex$sp, ...)
+
 
 \method{plot}{scalebootv}(x,models=attr(x,"models"),...)
 
-\method{lines}{scaleboot}(x,z,models=names(x$fi), length.x=z$length.x,
-      col=z$col,lty=z$lty,lwd=z$lwd,... )
+\method{plot}{summary.scalebootv}(x, models="best",...)
+
+
+\method{lines}{scaleboot}(x,z,models=names(x$fi), k=NULL,s=NULL,sp=NULL,
+      length.x=z$length.x, col=z$col,lty=z$lty,lwd=z$lwd,... )
 
 sblegend(x="topright",y=NULL,z,inset=0.1,...)
 
@@ -32,8 +44,13 @@ sblegend(x="topright",y=NULL,z,inset=0.1,...)
   \item{models}{character vector of model names. If numeric,
     \code{names(object$fi)[models]} is used for each \code{"scaleboot"}
     object.}
-  \item{xval}{specifies x-axis. "inverse" for \eqn{1/\sigma} or
-    \code{1/sqrt(sa[i])}, "sigma" for \eqn{\sigma} or \code{sqrt(sa[i])}.}
+  \item{k}{k for extrapolation.}
+  \item{s}{s for extrapolation.}
+  \item{sp}{sp for extrapolation.}
+  \item{xval}{specifies x-axis.
+    "square" for \eqn{\sigma^2},
+    "inverse" for \eqn{1/\sigma},
+    "sigma" for \eqn{\sigma}.}
   \item{yval}{specifies y-axis. "zvalue" for
     \eqn{\psi(\sigma^2|\beta)/\sigma} or \code{qnorm(1-bp[i])},
     "pvalue" for \eqn{1-\Phi(\psi(\sigma^2|\beta)/\sigma)} or \code{bp[i]},
@@ -45,15 +62,17 @@ sblegend(x="topright",y=NULL,z,inset=0.1,...)
   \item{ylim}{range for y-axis.}
   \item{add}{logical for adding another plot.}
   \item{length.x}{the number of segments to draw curves.}
+  \item{main}{for title.}
   \item{col}{color for model curves.}
   \item{lty}{lty for model curves.}
   \item{lwd}{lwd for model curves.}
+  \item{ex.pch}{pch for extrapolation.}
   \item{pch}{pch for bp points.}
   \item{cex}{cex for bp points.}
   \item{pt.col}{col for bp points.}
   \item{pt.lwd}{lwd for bp points.}
+  \item{legend.x}{passed to sblegend as the first argument.}
   \item{...}{further arguments passed to or from other methods.}  
-
   \item{z}{output from previous \code{plot.scaleboot}.}
   \item{y}{numeric passed to \code{legend}.}
   \item{inset}{inset distance from the margins, which is passed to
@@ -69,15 +88,14 @@ sblegend(x="topright",y=NULL,z,inset=0.1,...)
 data(mam15)
 ## a single plot
 a <- mam15.relltest[["t4"]] # an object of class "scaleboot"
-sblegend("topleft",z=plot(a)) # x=1/sigma, y=zvalue
-sblegend("topright",z=plot(a,xval="sigma",log="x")) # x=log(sigma)
-sblegend("bottomright",z=plot(a,xval="sigma",
-               yval="pval",log="xy")) # x=log(sigma), y=log(pvalue)
+plot(a,legend="topleft") # x=sigma^2, y=psi
+plot(a,xval="inverse",yval="zvalue",
+     legend="topleft") # x=1/sigma, y=z-value
+plot(a,xval="sigma",log="x",yval="pvalue",
+     legend="topleft") # x=log(sigma), y=probability
 ## multiple plots
 b <- mam15.relltest[1:15] # an object of class "scalebootv"
-plot(b) # x=1/sigma, y=zvalue
-plot(b,xval="sigma",log="x") # x=log(sigma)
-
+plot(b) # x=sigma^2, y=psi
 }
 \keyword{ hplot }
 \keyword{ models }

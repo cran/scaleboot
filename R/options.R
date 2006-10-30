@@ -22,10 +22,11 @@
 ###
 
 ## model names
-sbmodelnames <- function(m=3,poly=m,sing=m) {
+sbmodelnames <- function(m=3,poly=m,sing=m,sphe=0) {
   polyk <- if(poly>=1) paste("poly",1:poly,sep=".") else NULL
   singk <- if(sing>=3) paste("sing",3:sing,sep=".") else NULL
-  c(polyk,singk)
+  sphek <- if(sphe==3) paste("sphe",sphe,sep=".") else NULL
+  c(polyk,singk,sphek)
 }
 
 ## default options (local variable)
@@ -39,6 +40,7 @@ sbmodelnames <- function(m=3,poly=m,sing=m) {
        mag.poly = c(1,0.1,0.01,0.001),  # mag factor for par in poly model
        mag.sing = c(1,0.1,0.01,0.001),  # mag factor for par in sing model
        mag1.sing = 0.1,  # mag factor for singularity parameter
+       mag.sphe = c(1.0,1.0,0.01), # mag factor for spherical model
        percent = TRUE, # print p-values in percent
        digits.pval = 2, # significant digits for pvalue
        digits.coef = 4, # significant digits for coefficients

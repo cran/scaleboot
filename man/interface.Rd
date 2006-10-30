@@ -67,13 +67,13 @@ sbpvclust(x,mbs,k=3,k.bp=1,...)
 \references{
 Shimodaira, H. and Hasegawa, M. (2001). CONSEL: for
 assessing the confidence of phylogenetic tree selection,
-\emph{Bioinformatics}, 17, 1246-1247; available from
-\url{http://www.is.titech.ac.jp/~shimo/prog/consel/}.
+\emph{Bioinformatics}, 17, 1246-1247 (software is available from
+\url{http://www.is.titech.ac.jp/~shimo/prog/consel/}).
 
 Suzuki, R. and Shimodaira, H. (2006).
 pvclust: An R package for hierarchical clustering with p-values,
-\emph{Bioinformatics}, 22, 1540-1542; available from CRAN or
-\url{http://www.is.titech.ac.jp/~shimo/prog/pvclust/}.
+\emph{Bioinformatics}, 22, 1540-1542 (software is available from CRAN or
+\url{http://www.is.titech.ac.jp/~shimo/prog/pvclust/}).
 }
 \author{Hidetoshi Shimodaira}
 \seealso{\code{\link{relltest}}}

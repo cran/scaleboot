@@ -31,13 +31,19 @@ S3method(sbpval,summary.scalebootv)
 
 ### plot.R
 S3method(plot,scaleboot)
+S3method(plot,summary.scaleboot)
 S3method(lines,scaleboot)
 S3method(plot,scalebootv)
+S3method(plot,summary.scalebootv)
+export(plot.scaleboot)
+export(plot.scalebootv)
 export(sblegend)
 
 ### models.R
 export(sbpsi.poly)
 export(sbpsi.sing)
+export(sbpsi.sphe)
+export(sbpsi.generic)
 
 ### sbconf.R
 export(sbconf)

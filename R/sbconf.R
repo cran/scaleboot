@@ -18,6 +18,7 @@
 ##
 ######################################################################
 ### MAIN: CONFIDENCE INTERVALS
+### --- experimental code ---
 
 ## general
 sbconf <- function(x,...) UseMethod("sbconf")

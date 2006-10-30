@@ -57,9 +57,9 @@ mam15.relltest
 }  
 
   The log-likelihood values are calculated by PAML software (Ziheng 1997)
-  for phylogenetic inference. The two files \file{mam15.aa} and \file{mam15.tpl}
-  are fed into PAML to generate the file \file{mam15.lnf} of site-wise
-  log-likelihood values.
+  for phylogenetic inference. The two files \file{mam15.aa} and
+  \file{mam15.tpl} are fed into PAML to generate the file
+  \file{mam15.lnf} of site-wise log-likelihood values.
 
   Using CONSEL software (Shimodaira and Hasegawa 2001), we convert
   \file{mam15.lnf} and \file{mam15.tpl} to be suitable for scaleboot
@@ -137,7 +137,7 @@ summary(mam15.trees) # calculates AU p-values
   
   Note that the default value of scales in \code{\link{relltest}} ranges
   much wider than that of CONSEL. It is
-  \code{sa=10^seq(-2,2,length=13)} for \code{\link{relltest}}, and
+  \code{sa=9^seq(-1,1,length=13)} for \code{\link{relltest}}, and
   is \code{sa=1/seq(from=0.5,to=1.4,by=0.1)} for CONSEL.
 
   The \code{mam15.relltest} object in \code{data(mam15)} is similar
@@ -161,66 +161,66 @@ mam15.trees <- mam15.trees[o] # same as mam15.trees in Examples
 > mam15.trees
 
 Test Statistic, and Shimodaira-Hasegawa test:
-     stat   shtest        
-t1   -2.66  94.44 (0.07)  
-t3    2.66  80.08 (0.13)  
-t2    7.40  57.98 (0.16)  
-t5   17.57  17.55 (0.12)  
-t6   18.93  14.48 (0.11)  
-t7   20.11  11.64 (0.10)  
-t4   20.60  11.05 (0.10)  
-t15  22.22   7.61 (0.08)  
-t8   25.38   3.33 (0.06)  
-t14  26.32   3.33 (0.06)  
-t13  28.86   1.75 (0.04)  
-t9   31.64   0.66 (0.03)  
-t11  31.75   0.59 (0.02)  
-t10  34.74   0.21 (0.01)  
-t12  36.25   0.13 (0.01)  
+    stat  shtest       
+t1  -2.66 94.51 (0.07) 
+t3   2.66 80.25 (0.13) 
+t2   7.40 57.85 (0.16) 
+t5  17.57 17.30 (0.12) 
+t6  18.93 14.32 (0.11) 
+t7  20.11 11.49 (0.10) 
+t4  20.60 10.98 (0.10) 
+t15 22.22  7.34 (0.08) 
+t8  25.38  3.31 (0.06) 
+t14 26.32  3.29 (0.06) 
+t13 28.86  1.71 (0.04) 
+t9  31.64  0.61 (0.02) 
+t11 31.75  0.57 (0.02) 
+t10 34.74  0.20 (0.01) 
+t12 36.25  0.12 (0.01) 
 
 Multiscale Bootstrap Probabilities (percent):
-    1   2  3  4  5  6  7  8  9  10 11 12 13 
-t1  100 99 95 87 78 69 58 46 34 27 21 17 13 
-t3    0  1  5 13 22 29 32 29 24 19 15 12  9 
-t2    0  0  0  0  0  1  4  7 10 12 12 13 14 
-t5    0  0  0  0  0  0  1  4  6  7  7  6  5 
-t6    0  0  0  0  0  1  3  6  8  9  9  9  9 
-t7    0  0  0  0  0  0  1  2  4  6  6  6  6 
-t4    0  0  0  0  0  0  1  4  5  6  7  7  6 
-t15   0  0  0  0  0  0  0  1  2  3  4  4  5 
-t8    0  0  0  0  0  0  0  0  1  2  3  5  5 
-t14   0  0  0  0  0  0  0  1  3  4  6  6  7 
-t13   0  0  0  0  0  0  0  0  1  2  3  4  4 
-t9    0  0  0  0  0  0  0  0  0  1  3  4  6 
-t11   0  0  0  0  0  0  0  0  0  1  2  3  5 
-t10   0  0  0  0  0  0  0  0  0  0  1  2  3 
-t12   0  0  0  0  0  0  0  0  0  0  1  2  3 
+    1  2  3  4  5  6  7  8  9  10 11 12 13 
+t1  86 81 77 73 68 63 58 52 46 41 36 31 28 
+t3  14 19 23 27 30 32 32 31 30 27 25 22 20 
+t2   0  0  0  0  1  2  4  5  7  9 10 11 11 
+t5   0  0  0  0  0  1  1  2  3  5  6  6  7 
+t6   0  0  0  0  1  2  3  5  6  7  8  9  9 
+t7   0  0  0  0  0  0  0  1  2  3  4  5  5 
+t4   0  0  0  0  0  1  2  3  4  4  5  6  6 
+t15  0  0  0  0  0  0  0  0  1  1  2  2  3 
+t8   0  0  0  0  0  0  0  0  0  0  1  1  1 
+t14  0  0  0  0  0  0  0  1  1  2  3  4  4 
+t13  0  0  0  0  0  0  0  0  0  0  1  1  2 
+t9   0  0  0  0  0  0  0  0  0  0  0  1  1 
+t11  0  0  0  0  0  0  0  0  0  0  0  1  1 
+t10  0  0  0  0  0  0  0  0  0  0  0  0  0 
+t12  0  0  0  0  0  0  0  0  0  0  0  0  0 
 
 Numbers of Bootstrap Replicates:
 1     2     3     4     5     6     7     8     9     10    11    12    13    
 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 
 
 Scales (Sigma Squared):
-1    2       3       4   5      6      7 8     9     10    11    12    13    
-0.01 0.02154 0.04642 0.1 0.2154 0.4642 1 2.154 4.639 10.01 21.61 46.14 100.4 
+1      2      3      4      5      6      7 8     9     10 11    12    13    
+0.1111 0.1603 0.2311 0.3333 0.4808 0.6933 1 1.442 2.080 3  4.327 6.241 9.008 
 
 AIC values of Model Fitting:
-     poly.1     poly.2    poly.3   sing.3   
-t1   219783.17  14953.26  2885.53  2455.02  
-t3   228338.40  11285.41  2191.95  3237.38  
-t2    98108.84   9314.50  1798.68    10.02  
-t5   128773.41   4866.12   842.99    12.76  
-t6   129431.99  10889.79  1592.49    53.21  
-t7    98052.87   4851.55   467.46    -4.81  
-t4   123734.55   7911.70  1553.24    -8.97  
-t15   66196.14   3174.49   403.00   -16.31  
-t8    30512.50   1330.68   216.40    -9.74  
-t14   72262.39   4511.50   794.59   -15.73  
-t13   42502.49   1991.00   336.79    -8.00  
-t9    25700.97   1970.16   214.58    16.57  
-t11   20305.67   1494.20    96.66    28.16  
-t10   10091.05    667.74    52.68    16.63  
-t12    8677.45    702.91    76.19    47.86  
+    poly.1   poly.2  poly.3  sing.3  
+t1  89483.40  964.33  964.75  966.33 
+t3  75434.97 1750.22 1306.50 1752.22 
+t2  29361.29  403.41   36.33   -6.21 
+t5  23893.19  260.44   -0.22  -14.11 
+t6  35791.26  330.50    4.31   -2.49 
+t7  15221.10   93.59  -10.33  -12.04 
+t4  29790.60  453.95    5.22   -7.57 
+t15  6874.98   46.16  -10.48  -17.08 
+t8   1747.13   -6.88  -12.39  -13.68 
+t14 10905.94  131.48    2.65  -10.79 
+t13  3411.26   27.66   -8.30  -15.14 
+t9   1494.58   19.46  -13.78  -15.86 
+t11   914.42  -19.65  -19.71  -19.61 
+t10   259.68  -14.79  -17.27  -16.76 
+t12   178.79  -19.19  -19.61  -19.30 
 }
 
   The AU p-values are shown by the \code{summary} method.
@@ -228,22 +228,22 @@ t12    8677.45    702.91    76.19    47.86
 > summary(mam15.trees)
 
 Corrected P-values (percent):
-     raw           k.1           k.2           k.3           model   aic      
-t1   57.84 (0.16)  54.37 (0.06)  73.67 (0.05)  75.48 (0.07)  sing.3  2455.02  
-t3   31.82 (0.15)  28.91 (0.03)  45.77 (0.05)  45.93 (0.05)  poly.3  2191.95  
-t2    3.61 (0.06)   3.57 (0.03)  13.67 (0.22)  18.29 (0.41)  sing.3    10.02  
-t5    1.32 (0.04)   1.29 (0.02)   6.53 (0.17)   7.85 (0.24)  sing.3    12.76  
-t6    3.11 (0.05)   3.12 (0.03)  14.57 (0.23)  19.34 (0.41)  sing.3    53.21  
-t7    0.50 (0.02)   0.52 (0.02)   3.70 (0.16)   4.92 (0.25)  sing.3    -4.81  
-t4    1.46 (0.04)   1.44 (0.02)   9.50 (0.25)  13.11 (0.44)  sing.3    -8.97  
-t15   0.08 (0.01)   0.07 (0.01)   1.04 (0.10)   1.64 (0.19)  sing.3   -16.31  
-t8    0.00 (0.00)   0.00 (0.00)   0.05 (0.02)   0.10 (0.04)  sing.3    -9.74  
-t14   0.23 (0.02)   0.22 (0.01)   2.62 (0.19)   4.39 (0.40)  sing.3   -15.73  
-t13   0.01 (0.00)   0.01 (0.00)   0.23 (0.05)   0.47 (0.12)  sing.3    -8.00  
-t9    0.00 (0.00)   0.00 (0.00)   0.22 (0.02)   1.39 (0.13)  sing.3    16.57  
-t11   0.00 (0.00)   0.00 (0.00)   0.07 (0.01)   0.55 (0.07)  sing.3    28.16  
-t10   0.00 (0.00)   0.00 (0.00)   0.00 (0.00)   0.01 (0.00)  sing.3    16.63  
-t12   0.00 (0.00)   0.00 (0.00)   0.00 (0.00)   0.01 (0.00)  sing.3    47.86  
+    raw          k.1          k.2          k.3          model  aic     
+t1  57.58 (0.16) 56.16 (0.04) 74.55 (0.05) 74.55 (0.05) poly.2  964.33 
+t3  31.86 (0.15) 30.26 (0.05) 46.41 (0.09) 45.33 (0.13) poly.3 1306.50 
+t2   3.68 (0.06)  3.68 (0.03) 12.97 (0.20) 16.12 (0.45) sing.3   -6.21 
+t5   1.34 (0.04)  1.33 (0.02)  7.92 (0.25) 10.56 (0.56) sing.3  -14.11 
+t6   3.18 (0.06)  3.15 (0.02) 13.15 (0.21) 15.86 (0.44) sing.3   -2.49 
+t7   0.49 (0.02)  0.52 (0.01)  3.66 (0.21)  4.75 (0.42) sing.3  -12.04 
+t4   1.55 (0.04)  1.53 (0.02) 10.54 (0.27) 14.84 (0.66) sing.3   -7.57 
+t15  0.08 (0.01)  0.07 (0.00)  1.11 (0.19)  1.85 (0.48) sing.3  -17.08 
+t8   0.00 (0.00)  0.00 (0.00)  0.04 (0.03)  0.07 (0.07) sing.3  -13.68 
+t14  0.22 (0.01)  0.23 (0.01)  2.76 (0.26)  4.59 (0.71) sing.3  -10.79 
+t13  0.02 (0.00)  0.01 (0.00)  0.50 (0.20)  1.30 (0.83) sing.3  -15.14 
+t9   0.00 (0.00)  0.00 (0.00)  0.23 (0.05)  1.41 (0.29) sing.3  -15.86 
+t11  0.00 (0.00)  0.00 (0.00)  0.00 (0.00)  0.00 (0.00) poly.3  -19.71 
+t10  0.00 (0.00)  0.00 (0.00)  0.00 (0.00)  0.00 (0.00) poly.3  -17.27 
+t12  0.00 (0.00)  0.00 (0.00)  0.00 (0.00)  0.00 (0.00) poly.3  -19.61 
 }
 
   The p-values for 15 trees are shown above.  "raw" is
@@ -256,69 +256,61 @@ t12   0.00 (0.00)   0.00 (0.00)   0.00 (0.00)   0.01 (0.00)  sing.3    47.86
   example, the details for the seventh-largest tree in the
   log-likelihood value ("t4") is obtained by
 \preformatted{
-mam15.trees[[7]] # same as mam15.trees$t4
+> mam15.trees[[7]] # same as mam15.trees$t4
 
 Multiscale Bootstrap Probabilities (percent):
 1    2    3    4    5    6    7    8    9    10   11   12   13   
-0.00 0.00 0.00 0.00 0.01 0.22 1.46 3.56 5.43 6.48 6.75 6.69 5.96 
+0.00 0.00 0.01 0.08 0.27 0.80 1.55 2.55 3.58 4.42 5.22 6.00 6.38 
 
 Numbers of Bootstrap Replicates:
 1     2     3     4     5     6     7     8     9     10    11    12    13    
 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 1e+05 
 
 Scales (Sigma Squared):
-1    2       3       4   5      6      7 8     9     10    11    12    13    
-0.01 0.02154 0.04642 0.1 0.2154 0.4642 1 2.154 4.639 10.01 21.61 46.14 100.4 
+1      2      3      4      5      6      7 8     9     10 11    12    13    
+0.1111 0.1603 0.2311 0.3333 0.4808 0.6933 1 1.442 2.080 3  4.327 6.241 9.008 
 
 Coefficients:
-        beta0            beta1            beta2             
-poly.1  3.9815 (0.0080)                                     
-poly.2  2.4081 (0.0072)  0.1615 (0.0005)                    
-poly.3  2.0738 (0.0076)  0.2515 (0.0013)  -0.0012 (0.0000)  
-sing.3  1.6697 (0.0129)  0.5175 (0.0082)   0.3058 (0.0072)  
+       beta0           beta1           beta2            
+poly.1 2.8388 (0.0048)                                  
+poly.2 1.8556 (0.0061) 0.3259 (0.0019)                  
+poly.3 1.7157 (0.0085) 0.4508 (0.0061) -0.0152 (0.0007) 
+sing.3 1.6178 (0.0153) 0.5435 (0.0143)  0.3261 (0.0201) 
 
 Model Fitting:
-        rss        df  pfit    aic        
-poly.1  123758.55  12  0.0000  123734.55  
-poly.2    7933.70  11  0.0000    7911.70  
-poly.3    1573.24  10  0.0000    1553.24  
-sing.3      11.03  10  0.3554      -8.97  
+       rss      df pfit   aic      
+poly.1 29814.60 12 0.0000 29790.60 
+poly.2   475.95 11 0.0000   453.95 
+poly.3    25.22 10 0.0050     5.22 
+sing.3    12.43 10 0.2571    -7.57 
 
 Best Model:  sing.3 
 > summary(mam15.trees[[7]])
 
-Raw Bootstrap Probability:  1.46 (0.04) 
+Raw Bootstrap Probability:  1.55 (0.04) 
 
 Corrected P-values (percent):
-        k.1          k.2          k.3           aic        
-poly.1  0.00 (0.00)  0.00 (0.00)   0.00 (0.00)  123734.55  
-poly.2  0.51 (0.01)  1.23 (0.02)   1.23 (0.02)    7911.70  
-poly.3  1.01 (0.02)  3.39 (0.06)   3.43 (0.06)    1553.24  
-sing.3  1.44 (0.02)  9.50 (0.25)  13.11 (0.44)      -8.97  
+       k.1         k.2          k.3          aic      
+poly.1 0.23 (0.00)  0.23 (0.00)  0.23 (0.00) 29790.60 
+poly.2 1.46 (0.02)  6.30 (0.09)  6.30 (0.09)   453.95 
+poly.3 1.57 (0.02)  9.50 (0.21) 10.57 (0.27)     5.22 
+sing.3 1.53 (0.02) 10.54 (0.27) 14.84 (0.66)    -7.57 
 
-Best Model:  sing.3
+Best Model:  sing.3 
 
-> sblegend("topleft",z=plot(mam15.trees[[7]])) # plot diagnostics
+> plot(mam15.trees[[7]],legend="topleft")
 }  
   Especially, the plot diagnostics in the bottom line is useful
-  to identify which model is fitting best.
+  to confirm which model is fitting best.
 
   See other examples below.
 }
 \note{
   Dataset files for the phylogenetic inference are found at
   \url{http://www.is.titech.ac.jp/~shimo/prog/scaleboot/}.
-  For unix users, download \file{mam15-files.tgz}, and for Windows users
+  For Unix users, download \file{mam15-files.tgz}, and for Windows users
   download \file{mam15-files.zip}.  This dataset
-  is originally used in Shimodaira and Hasegawa (1999).
-
-  \file{mam15.aa}: amino acid sequences (N=3414) for the six mammals.
-  \file{mam15.ass}: association vectors for edges and trees.
-  \file{mam15.cnt}: multiscale bootstrap counts.
-  \file{mam15.lnf}: site-wise log-likelihood values (output from PAML).
-  \file{mam15.log}: detailed information for the associations.
-  \file{mam15.mt}: site-wise log-likelihood values (output from seqmt).
-  \file{mam15.tpl}: 15 tree topologies.
+  was originally used in Shimodaira and Hasegawa (1999).
   }
 \source{
   H. Shimodaira and M. Hasegawa (1999). Multiple comparisons of
@@ -328,13 +320,13 @@ Best Model:  sing.3
 \references{
   Yang, Z. (1997). PAML: a program package for phylogenetic analysis by
   maximum likelihood, \emph{Computer Applications in BioSciences},
-  13:555-556; available from
-  \url{http://abacus.gene.ucl.ac.uk/software/paml.html}.
+  13:555-556 (software is available from
+  \url{http://abacus.gene.ucl.ac.uk/software/paml.html}).
   
   Shimodaira, H. and Hasegawa, M. (2001). CONSEL: for assessing the
   confidence of phylogenetic tree selection, \emph{Bioinformatics}, 17,
-  1246-1247; available from
-  \url{http://www.is.titech.ac.jp/~shimo/prog/consel/}.
+  1246-1247 (software is available from
+  \url{http://www.is.titech.ac.jp/~shimo/prog/consel/}).
 }
 \seealso{\code{\link{relltest}}, \code{\link{summary.scalebootv}},
   \code{\link{read.mt}}, \code{\link{read.ass}}.}
@@ -345,21 +337,6 @@ data(mam15)
 mam15.relltest # print stat, shtest, bootstrap probabilities, and AIC
 summary(mam15.relltest) # print AU p-values
 
-## extract trees in increasing order of the test statistic
-stat <- attr(mam15.relltest,"stat") # log-likelihood difference
-o <- order(stat[1:15]) # sort in increasing order (t1,...,t15)
-mam15.trees <- mam15.relltest[o] # extract elements from relltest object
-mam15.trees  # print stat, shtest, bootstrap probabilities, and AIC
-summary(mam15.trees) # print AU p-values
-plot(mam15.trees) # draw the curve fitting
-
-## extract edges in increasing order of the test statistics
-o <- 15+order(stat[16:25]) # sort in increasing order (e1,...,e10)
-mam15.edges <- mam15.relltest[o]
-mam15.edges  # print stat, shtest, bootstrap probabilities, and AIC
-summary(mam15.edges) # print AU p-values
-plot(mam15.edges) # draw the curve fitting
-
 \dontrun{
 ## simpler script to create mam15.trees
 mam15.mt <- read.mt("mam15.mt")
@@ -369,7 +346,6 @@ mam15.trees <- relltest(mam15.mt,nb=100000)
 
 \dontrun{
 ## script to create mam15.relltest
-## It took 260 mins (Xeon 2.4GHz)
 mam15.mt <- read.mt("mam15.mt")
 mam15.ass <- read.ass("mam15.ass")
 mam15.relltest <- relltest(mam15.mt,nb=100000,ass=mam15.ass)

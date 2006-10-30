@@ -266,9 +266,16 @@ expsx <- function(x) sign(x)*(exp(abs(x))-1)
 logsx <- function(x) sign(x)*log(abs(x)+1)
 
 ## nderiv: numerical derivative
-nderiv <- function(fn,x,eps=1e-4) {
-  apply(diag(length(x))*eps,1,
-        function(h) 0.5*(fn(x+h)-fn(x-h))/eps)
+nderiv <- function(fn,x,k=1,eps=1e-3) {
+  if(k==1) {
+    apply(diag(length(x))*eps,1,
+          function(h) 0.5*(fn(x+h)-fn(x-h))/eps)
+  } else if(k<=0) {
+    fn(x)
+  } else {
+    apply(diag(length(x))*eps,1,
+          function(h) 0.5*(nderiv(fn,x+h,k-1)-nderiv(fn,x-h,k-1))/eps)
+  }
 }
 
 ## sebp: standard error of bootstrap probability
@@ -297,7 +304,7 @@ myformat <- function(x,s=NULL,digits=6,h=NULL) {
 }
 
 ## catmat
-catmat <- function(x,rn=rownames(x),cn=colnames(x),sep="  ",file="") {
+catmat <- function(x,rn=rownames(x),cn=colnames(x),sep=" ",file="") {
   y <- x
   if(!is.null(rn)) y <- cbind(format(rn),y)
   if(!is.null(cn)) {
