@@ -12,15 +12,17 @@ multiscale bootstrap probabilities.
 For a complete
 list, use \code{library(help="scaleboot")}.
 
-Further information is available in the following vignettes:
+Further information is available in the following vignette:
 \tabular{ll}{
-\code{usesb} \tab Using scaleboot (source, pdf)\cr
+\code{usesb} \tab Multiscale Bootstrap using Scaleboot Package\cr
 }
 }
 \author{
 Hidetoshi Shimodaira
 
 Maintainer: Hidetoshi Shimodaira <shimo@is.titech.ac.jp>
+
+I thank Paul A. Sheridan for his comments to improve the manual pages.
 }
 \keyword{ package }
 \keyword{ models }

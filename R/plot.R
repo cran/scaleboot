@@ -213,8 +213,8 @@ lines.scaleboot <- function(x,z,
       beta <- f$par*f$mag
       psi <- get(f$psi)
       yy[u1,1] <- sapply(sa[u1],function(s) psi(beta,s))
-      for(i in k) {
-        py <- sapply(sa[u2],function(s1) psi(beta,s=s,k=i,sp=s1))
+      for(i in seq(along=k)) {
+        py <- sapply(sa[u2],function(s1) psi(beta,s=s,k=k[i],sp=s1))
         yy[u2,i+1] <- z$yfun(py,sa)
       }
     }

@@ -64,13 +64,13 @@ sbconf(x, ...)
   \item{mk.lty}{lty for crosses drawn at \code{probs}.}
 }
 \details{
-  Let \code{x[[i]]} be a vector of bootstrap replicates of a statistic
-  at scale \code{sa[i]}. For a threshold value \code{y}, the bootstrap
+  Let \code{x[[i]]} be a vector of bootstrap replicates for a statistic
+  with scale \code{sa[i]}. For a threshold value \code{y}, the bootstrap
   probability is
   \code{bp[i]=sum(x[[i]]<y)/length(x[[i]])}. \code{sbconf} computes
-  \code{bp} for several \code{y} values, and find a value \code{y} at
-  which the AU p-value given by \code{sbfit} equals a probability value
-  specified in \code{probs}.  This is inversion of AU p-values to obtain
+  \code{bp} for several \code{y} values, and finds a value \code{y} at
+  which the AU p-value, given by \code{sbfit}, equals a probability value
+  specified in \code{probs}.  In this manner, AU p-values are inverted to obtain
   bootstrap confidence intervals.
 
   See the examples below for details.
@@ -88,7 +88,7 @@ sbconf(x, ...)
 \dontrun{
 ## An example to calculate confidence intervals
 ## The test statistic is that for "t4" in data(mam15)
-## In the below, we used 40 cpu's.
+## In the following, we used 40 cpu's.
 ##
 library(snow)
 library(scaleboot)

@@ -79,11 +79,11 @@ sblegend(x="topright",y=NULL,z,inset=0.1,...)
     \code{legend}.}
 }
 \details{
-  \code{plot} method plots bootstrap probabilities and call \code{lines}
+  The \code{plot} method plots bootstrap probabilities and calls the \code{lines}
   method, which draws fitted curves for models.
 }
 \author{Hidetoshi Shimodaira}
-\seealso{\code{\link{sbfit}},\code{\link{legend}}.}
+\seealso{\code{\link{sbfit}}.}
 \examples{
 data(mam15)
 ## a single plot

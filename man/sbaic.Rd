@@ -22,7 +22,7 @@ sbaic(x) <- value
 \arguments{
   \item{x}{an object used to select a method. }
   \item{k}{numeric, the penalty per parameter to be used.}
-  \item{value}{numeric vector of aic values for models.}
+  \item{value}{numeric vector of AIC values for models.}
   \item{...}{}
 }
 \details{
@@ -31,9 +31,9 @@ sbaic(x) <- value
 }
 \value{
   For an object of class \code{"scaleboot"},
-  \code{sbaic} returns a numeric vector of aic values for
+  \code{sbaic} returns a numeric vector of AIC values for
   models.  If
-  \code{k} is missing, the \code{aic} components in \code{fi} vector of
+  \code{k} is missing, then the \code{aic} components in the \code{fi} vector of
   \code{x} are returned.  If \code{k} is specified, \code{rss-k*df} is
   calculated for each model. For the usual AIC, k=2.  For the BIC
   (Schwarz's Bayesian information criterion), \code{k=log(sum(x$nb))}.
@@ -44,7 +44,7 @@ sbaic(x) <- value
   D. Reidel Publishing Company.
 }
 \author{Hidetoshi Shimodaira}
-\seealso{\code{\link{sbfit}}, \code{\link{AIC}}}
+\seealso{\code{\link{sbfit}}.}
 \examples{
 data(mam15)
 a <- mam15.relltest[["t4"]] # an object of class "scaleboot"

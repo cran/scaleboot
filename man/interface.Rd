@@ -7,7 +7,7 @@
 \alias{sbpvclust}
 \title{Interface to External Packages}
 \description{
-  Interface to other packages such as
+  Interface for other packages such as
   CONSEL (phylogenetic inference), and pvclust (hierarchical clustering)
 }
 \usage{
@@ -34,9 +34,9 @@ sbpvclust(x,mbs,k=3,k.bp=1,...)
   \item{k.bp}{numeric of \eqn{k} for a BP p-value.}
 }
 \details{
-   CONSEL is a program package consists of small programs written in C language
-   for assessing the confidence of phylogenetic tree selection.
-   Functions for interface to CONSEL are:
+   CONSEL is a program package consisting of small programs written in
+   the C language for assessing the confidence of phylogenetic tree selection.
+   Some functions for interfacing with CONSEL are:
    \code{read.mt},   \code{read.ass},  and \code{read.cnt}
    for reading, respectively, \code{mt}, \code{ass}, and \code{cnt}
    format. Once \code{mt} file is read, we can calculate improved
@@ -46,17 +46,17 @@ sbpvclust(x,mbs,k=3,k.bp=1,...)
    pvclust is a R package for hierarchical clustering with p-values.
    Functions for interface to pvclust are: \code{sbfit} method for an
    object of class \code{"pvclust"} to convert it to \code{"scalebootv"} class,
-   and \code{sbpvclust} for writing back the result to a \code{"pvclust"} object.
-
+   and \code{sbpvclust} for writing back the result to a
+   \code{"pvclust"} object.
  }
 \value{
-  \code{read.mt} returns a matrix of dim sequence-length by tree-number.
-  If identity=FALSE, \code{read.ass} returns a list containing components
-  \code{x} for edge->tree associations and \code{y} for tree->edge associations.
-  If identity=TRUE, \code{read.ass} returns a list vector of edge->tree
-  associations, where identity associations for tree->tree are included.
+  \code{read.mt} returns a matrix of dimension sequence-length by tree-number.
+  If \code{identity=FALSE}, then \code{read.ass} returns a list containing components
+  \code{x} for edge->tree associations and \code{y} for tree$\to$edge associations.
+  If \code{identity=TRUE}, \code{read.ass} returns a list vector of edge$\to$tree
+  associations, where the identity associations for tree$\to$tree are included.
   \code{read.cnt} returns a list containing components \code{bps},
-  \code{nb}, and \code{sa} to be used for \code{sbfit}. Also contains
+  \code{nb}, and \code{sa} to be used for \code{sbfit}. The list also contains
   components \code{cnt}, \code{id}, and \code{val}.
 
   \code{sbfit.pvclust} returns an object of class

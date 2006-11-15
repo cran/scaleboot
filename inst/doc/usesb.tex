@@ -1,7 +1,7 @@
 % scaleboot/vignette.tex shimo@is.titech.ac.jp
-% $Id: usesb.Rnw,v 1.3 2006/10/30 02:22:10 shimo Exp $
-%%\VignetteIndexEntry{Using scaleboot}
-\def\documentid{\getTime-stamp: "2006-10-30 11:16:44 shimo"}
+% $Id: usesb.Rnw,v 1.6 2006/11/14 15:08:10 shimo Exp $
+%%\VignetteIndexEntry{Multiscale Bootstrap using Scaleboot Package}
+\def\documentid{\getTime-stamp: "2006-11-15 00:07:40 shimo"}
 \def\getTime-stamp: "#1"{#1}
 
 \documentclass[a4paper]{amsart}
@@ -12,10 +12,11 @@
 \begin{document}
 
 
-\title{Multiscale Bootstrap using scaleboot package}
+\title{Multiscale Bootstrap using Scaleboot Package}
 \author{Hidetoshi Shimodaira}
-\thanks{This package vignette is included in {\tt scaleboot}
- available from CRAN. The source file is usesb.Rnw (\documentid).}
+\thanks{This document is a part of the {\tt scaleboot} package.
+The source file is usesb.Rnw (\documentid).
+I thank Paul A. Sheridan for his comments to improve the manuscript.}
 \address{Department of Mathematical and Computing Sciences\\
 Tokyo Institute of Technology\\
 2-12-1 Ookayama, Meguro-ku, Tokyo 152-8552, Japan}
@@ -26,17 +27,17 @@ Tokyo Institute of Technology\\
 
 \section{Introduction}
 
-The {\tt scaleboot} is an add-on package of R. This is for calculating
-approximately unbiased (AU) $p$-values for a general problem from a
-set of multiscale bootstrap probabilities (BPs). Scaling is equivalent
-to changing the sample size of dataset in bootstrap resampling. We
+{\tt scaleboot} is an add-on package for R. It is for calculating
+approximately unbiased (AU) $p$-values for a general problem from a set
+of multiscale bootstrap probabilities (BPs). Scaling is equivalent to
+changing the sample size of a data in bootstrap resampling. We
 compute BPs at several scales, from which a very accurate $p$-value is
 calculated (Shimodaira 2002). This multiscale bootstrap method has
-been implemented in {\tt CONSEL} software (Shimodaira and Hasegawa
-2001) for phylogenetic inference and {\tt pvclust} package (Suzuki and
-Shimodaira 2006) for hierarchical clustering. The thrust of {\tt
-scaleboot} package is to calculate an improved version of AU
-$p$-values which are justified even for hypotheses with nonsmooth
+been implemented in {\tt CONSEL} (Shimodaira and Hasegawa 2001) for
+phylogenetic inference and as the R add-on package {\tt pvclust}
+(Suzuki and Shimodaira 2006) for hierarchical clustering. The point of
+the {\tt scaleboot} package is to calculate an improved version of the
+AU $p$-value that is justified even for hypotheses with nonsmooth
 boundaries (Shimodaira 2006).
 
 The basic usage of this package is illustrated in a simple example
@@ -45,16 +46,16 @@ phylogenetic inference are shown later.
 
 \section{Install}
 
-{\tt scaleboot} is easily installed from CRAN online. Windows users
-may use the pull-down menu for install and just choose
-``scaleboot''. Otherwise, run R on your computer and type
+{\tt scaleboot} is easily installed from CRAN online.  Windows users
+can install the package by choosing ``scaleboot'' from the pull-down
+menu.  Otherwise, run R on your computer and type
 \begin{Schunk}
 \begin{Sinput}
 > install.packages("scaleboot")
 \end{Sinput}
 \end{Schunk}
-You can also download the package file from the URL below, and install
-manually.
+You can also download the package file from the URL below and
+install it manually.
 
 \url{http://www.is.titech.ac.jp/~shimo/prog/scaleboot/}
 
@@ -63,7 +64,7 @@ manually.
 
 \subsection{Simulation Data}
 
-We first generate a simulation dataset.
+We first generate a simulation data.
 \begin{Schunk}
 \begin{Sinput}
 > simdata <- function(n, y, sd) {
@@ -89,9 +90,9 @@ We first generate a simulation dataset.
 \end{Soutput}
 \end{Schunk}
 The matrix $X=(x_{ij})$ above is of size $n\times m$ with $n=100$,
-$m=10$. We consider that $X$ is a dataset of sample size $n$, and rows
-$x_i = (x_{11},\ldots,x_{im})$, $i=1,\ldots,n$, are observations of a
-random vector of $m$ dimensions. 
+$m=10$. We consider $X$ as a data of sample size $n$, and rows
+$x_i = (x_{i1},\ldots,x_{im})$, $i=1,\ldots,n$, are observations of a
+random vector of $m$ dimensions.
 
 \subsection{Null Hypothesis}
 
@@ -118,14 +119,14 @@ This is what {\tt scaleboot} calculates as $p$-values.
 
 \subsection{Bootstrap Probabilities}
 
-A naive way to calculate $p$-value is the bootstrap resampling.  Let
+A naive way to calculate a $p$-value is by bootstrap resampling.  Let
 $X^*=(x^*_{ij})$ be a bootstrap sample of $X$; each row $x^*_i$ is
 obtained by resampling with replacement from the rows
 $x_1,\ldots,x_n$.  Let $n'$ be the size of the resampling so that
 $X^*$ is a matrix of size $n'\times m$. The bootstrap replicate is
 $y^* = \bar x^* = \tfrac{1}{n'} \sum_{i=1}^{n'} x_i^*$. The following
-code generates a $X^*$ of $n'=n$, and calculates $f(y^*)$. The
-resampling is made via weight vector {\tt w}; $w_i$ is the number of
+code generates an $X^*$ with $n'=n$, and calculates $f(y^*)$. The
+resampling is made via a weight vector {\tt w}; $w_i$ is the number of
 times that $x_i$ is resampled in $X^*$.
 \begin{Schunk}
 \begin{Sinput}
@@ -152,7 +153,7 @@ times that $x_i$ is resampled in $X^*$.
 Let $B$ be the number of bootstrap samples we will generate, and
 $y^*_1,\ldots, y^*_B$ be the bootstrap replicates. Typically,
 $B=10,000$. The BP is computed as $\sum_{i=1}^B f(y^*_i)/B$, where the
-ordinary BP uses $n'=n$.  Since the first introduction by Felsenstein
+ordinary BP uses $n'=n$.  Since first introduced by Felsenstein
 (1985), it has been widely used as a $p$-value, but the bias is in
 fact rather large.
 
@@ -167,7 +168,7 @@ First load the package by
 \end{Sinput}
 \end{Schunk}
 
-In the below, {\tt sa} specifies the scales, and {\tt nb} specifies
+Below, {\tt sa} specifies the scales, and {\tt nb} specifies
 $B$ for each scale, so that $10,000\times13=130,000$ bootstrap samples
 are generated internally.  It takes a few minutes on a pc.
 \begin{Schunk}
@@ -205,20 +206,20 @@ rows. $p_1\approx 1\%$ corresponds to the ordinary BP, and $p_2\approx
 18\%$ corresponds to the AU $p$-value of Shimodaira (2002).  What we
 recommend to use here is $p_3\approx41\%$; this is the AU $p$-value of
 Shimodaira (2006).  For this particular example, the common practice
-for calculating $p$-value is to use the multiple comparisons
-method. If it applied to $y$, the $p$-value is $p=66\%$, which is
+for calculating a $p$-value is to use the multiple comparisons
+method. If it is applied to $y$, the $p$-value is $p=66\%$, which is
 rather close to $p_3$ in our example, whereas $p_1$ is obviously too
 small.
 
 \subsection{Internal Steps}
 
 We consider the following three steps (i)-(iii).
-Internally, {\tt scaleboot} function (i) performs the multiscale
+Internally, the {\tt scaleboot} function (i) performs the multiscale
 bootstrap, and (ii) estimates coefficients for candidate models. Then
 the {\tt summary} method (iii) calculates the corrected $p$-values.
 These steps are explained below.
 
-The results of steps (i) and (ii) are shown by
+The results of steps (i) and (ii) are shown here.
 \begin{Schunk}
 \begin{Sinput}
 > X.sb
@@ -259,20 +260,23 @@ $\alpha_{\sigma^2}$ denote the BP at scale $\sigma^2$. Each BP is
 calculated from 10,000 bootstrap samples of size $n'$ as the frequency
 of observing $f(y^*)=1$. In {\tt scaleboot}, $n'$ is {\tt
 round(n/sa[i])}, for $i=1,\ldots,13$. Then, the scale is recalculated
-as $\sigma^2=n/n'$ for taking account of the discreteness. The actual
-labor of {\tt scaleboot} function is in fact only step (i).
+as $\sigma^2=n/n'$ for taking account of the discreteness. 
 
-The step (ii) is performed by {\tt sbfit} function internally for
-fitting parametric models to observed $\alpha_{\sigma^2}$'s.  By
-default, four models are considered as candidates; {\tt poly.1}, {\tt
-poly.2}, {\tt poly.3}, and {\tt sing.3}. Each of these models are
-denoted as $\psi(\sigma^2|\beta)$. Let $z_{\sigma^2} = \Phi^{-1}( 1 -
+Step (ii) is performed by the {\tt sbfit} function called internally
+from the {\tt scaleboot} function for fitting parametric models to
+observed $\alpha_{\sigma^2}$'s.  By default, four models are
+considered as candidates; {\tt poly.1}, {\tt poly.2}, {\tt poly.3},
+and {\tt sing.3}. Each of these models is denoted as
+$\psi(\sigma^2|\beta)$. Let $z_{\sigma^2} = \Phi^{-1}( 1 -
 \alpha_{\sigma^2})$ be the bootstrap $z$-value at scale $\sigma^2$,
-where $\Phi^{-1}(p)$={\tt qnorm(p)}.  The coefficient vector $\beta$
-is estimated by fitting $\sigma z_{\sigma^2} = \psi(\sigma^2 |
-\beta)$.  Let $\hat\beta$ denote the estimated value; the detail of
-fitting is explained later.  We may choose the model which minimizes
-AIC value. The fitted curves are shown (Fig.~\ref{fig:diag1f}) by plotting
+where $\Phi^{-1}(p)$={\tt qnorm(p)}.  We work on $\sigma
+z_{\sigma^2}(y)$, which may be called a normalized bootstrap
+$z$-value.  Considering $\sigma z_{\sigma^2}$ as a function of
+$\sigma^2$, the coefficient vector $\beta$ is estimated by fitting
+$\sigma z_{\sigma^2} = \psi(\sigma^2 | \beta)$.  Let $\hat\beta$
+denote the estimated value; the details of fitting $\hat\beta$ are
+explained later.  We may choose the model which minimizes AIC
+value. The fitted curves are shown (Fig.~\ref{fig:diag1f}) by plotting
 $\psi(\sigma^2|\hat\beta)$ as
 \begin{Schunk}
 \begin{Sinput}
@@ -305,16 +309,16 @@ The same plot but in other variables can be shown
 {\tt poly.k} model is specified as a polynomial of $\sigma^2$;
 $\psi(\sigma^2|\beta) = \sum_{j=0}^{k-1} \beta_j \sigma^{2j}$ for
 $k\ge1$.  {\tt sing.k} model is specified as $\psi(\sigma^2|\beta) =
-\beta_0 + \sum_{j=1}^{k-2} \beta_j \sigma^{2j} (1+a)/(1+a \sigma)$ for
-$k\ge3$, where $a=\beta_{k-1}/(1-\beta_{k-1})$ so that $0\le a \le
-\infty$ for $0\le\beta_{k-1}\le1$. The number {\tt k} for each model
-denotes the number of coefficients in $\beta$.
+\beta_0 + \sum_{j=1}^{k-2} \beta_j \sigma^{2j}/(1 +
+\beta_{k-1}(\sigma-1))$ for $k\ge3$, where $0\le\beta_{k-1}\le1$. The
+number {\tt k} for each model denotes the number of coefficients in
+$\beta$.
 
-The detail of model fitting is as follows. Let $B_i$ and $C_i$ be the
-number of replicates and the observed number of times that $f(y^*)=1$,
-respectively, for the bootstrap resampling of scale $\sigma^2_i$,
-$i=1,\ldots,S$. Since each $C_i$ is distributed as binomial, the
-log-likelihood is
+The details of model fitting are as follows. Let $B_i$ and $C_i$ be
+the number of replicates and the observed number of times that
+$f(y^*)=1$, respectively, for the bootstrap resampling of scale
+$\sigma^2_i$, $i=1,\ldots,S$. Since each $C_i$ is binomially
+distributed, the log-likelihood is
 \[
 \ell(\beta) = \sum_{i=1}^S \Bigl\{
 C_i \log \Phi(-\psi(\sigma^2_i|\beta)/\sigma_i)+
@@ -332,23 +336,23 @@ where $\hat\ell = \sum_{i=1}^S ( C_i\log(C_i/B_i) +
 (B_i-C_i)\log(1-C_i/B_i)) $.
 
 
-The step (iii) is performed by the the {\tt summary} method as already
+Step (iii) is performed by the the {\tt summary} method as already
 mentioned. The first line shows the ``raw'' BP $\alpha_1$ (the BP
 obtained from the ordinary bootstrap resampling).  The main results
-are the corrected $p$-values follow next. For each model, we calculate
-$q_k$, $k=1,2,3$, by
+are the corrected $p$-values, which follow next. For each model, we
+calculate $q_k$, $k=1,2,3$, by
 \[
 q_k = \sum_{j=0}^{k-1} \frac{(-1-\sigma_0^2)^j}{j!}
 \frac{\partial^j \psi(\sigma^2|\hat\beta)}{\partial (\sigma^2)^j}
 \Bigr|_{\sigma_0^2}.
 \]
-Then the corrected $p$-values are calculated by $p_k=1-\Phi(q_k)$.
-By default $\sigma_0^2=1$. The
-calculation of $q_k$ is interpreted as extrapolation of $\sigma
-z_{\sigma^2}$ to $\sigma^2=-1$ by using the first $k$ terms of the
-Taylor series. According to the theory of Shimodaira (2006), the
-unbiased $p$-value is, if exists, obtained by taking the limit
-$k\to\infty$. The extrapolated curves are shown (Fig.~\ref{fig:diag1s}) by
+Then the corrected $p$-values are calculated by $p_k=1-\Phi(q_k)$.  By
+default $\sigma_0^2=1$. The calculation of $q_k$ is interpreted as
+extrapolation of $\sigma z_{\sigma^2}$ to $\sigma^2=-1$ by using the
+first $k$ terms of the Taylor series. According to the theory of
+Shimodaira (2006), the unbiased $p$-value is, if it exists, obtained
+by taking the limit $k\to\infty$. The extrapolated curves are shown
+(Fig.~\ref{fig:diag1s}) by
 \begin{Schunk}
 \begin{Sinput}
 > plot(summary(X.sb), legend = "topleft")
@@ -366,23 +370,23 @@ $k\to\infty$. The extrapolated curves are shown (Fig.~\ref{fig:diag1s}) by
 
 \subsection{Pvclust Package}
 
-{\tt scaleboot} package includes an interface to {\tt pvclust} package
-(Suzuki and Shimodaira 2006) of R for bootstrapping hierarchical
-clustering.  We use {\tt pvclust} to calculate multiscale BPs for
-clusters, from which we calculate an improved version of AU p-values
-using {\tt scaleboot}. See {\tt help(lung73)} for further details of
-the following example.
+The {\tt scaleboot} package includes an interface for the {\tt
+pvclust} package (Suzuki and Shimodaira 2006).  We use {\tt pvclust}
+to calculate multiscale BPs for clusters by bootstrapping hierarchical
+clustering, from which we calculate an improved version of AU
+$p$-values using {\tt scaleboot}. See {\tt help(lung73)} for further
+details of the following example.
 
 \subsection{Using Pvclust}
 
-We work on {\tt lung} dataset (Garber et al.~2001) included in {\tt
-pvclust}.  It is a DNA microarray dataset of 73 lung tissues (arrays)
-with 916 observations of genes.  To draw dendrograms in terms of the
-arrays, we resample genes in our analysis; this may be interpreted as
-assessing the uncertainty due to variability of genes.  The function
-{\tt pvclust} first obtains a dendrogram by a hierarchical clustering
-method, and then calculates the multiscale BPs for each cluster of the
-dendrogram.
+This example uses the {\tt lung} dataset (Garber et al.~2001) included
+in {\tt pvclust}.  It is a DNA microarray data of 73 lung tissues
+(arrays) with 916 observations of genes.  To draw dendrograms in terms
+of the arrays, we resample genes in our analysis; this may be
+interpreted as assessing the uncertainty due to the variability of
+genes.  The function {\tt pvclust} first obtains a dendrogram by a
+hierarchical clustering method, and then calculates the multiscale BPs
+for each cluster of the dendrogram.
 \begin{Schunk}
 \begin{Sinput}
 > library(pvclust)
@@ -392,14 +396,14 @@ dendrogram.
 > lung73.pvclust <- pvclust(lung, r = 1/sa, nboot = nb)
 \end{Sinput}
 \end{Schunk}
-The above code may take a day, so it would be a good idea to run with
-nb=1000 so that 10 times faster. However, nb=1000 should be just
-for checking the program, and nb=10,000 (at least) is recommended for
-publishing the result. 
+The above code may take a day, so it would be a good idea to run
+with nb=1000 so that it would run 10 times faster. However, nb=1000
+should be used just for checking the program, and nb=10,000 (at least)
+is recommended for publishing the results.
 
 \subsection{Model Fitting}
 
-We next apply {\tt sbfit} function of {\tt scaleboot} to the
+We next apply the {\tt sbfit} function of {\tt scaleboot} to the
 multiscale BPs. For each cluster of the dendrogram, parametric models
 are fitted to the BPs.
 \begin{Schunk}
@@ -412,7 +416,7 @@ are fitted to the BPs.
 \subsection{Lung73 Dataset}
 
 The results of the previous two sections ({\tt lung73.pvclust} and
-{\tt lung73.sb}) are in fact stored in {\tt lung73} dataset of {\tt
+{\tt lung73.sb}) are in fact stored in the {\tt lung73} dataset of {\tt
 scaleboot}. For users who want to try the examples, just type as follows.
 \begin{Schunk}
 \begin{Sinput}
@@ -422,8 +426,8 @@ scaleboot}. For users who want to try the examples, just type as follows.
 \end{Schunk}
 
 We have used a cluster computer of 40 cpus for parallel
-computing using {\tt snow} package.
-The following code may take only an hour.
+computing using the {\tt snow} package.
+The following code may run in under an hour.
 \begin{Schunk}
 \begin{Sinput}
 > library(snow)
@@ -440,7 +444,7 @@ The following code may take only an hour.
 
 \subsection{$P$-value Calculation}
 
-To calculate AU p-values ($p_3$) from {\tt lung73.sb} and write them
+To calculate AU $p$-values ($p_3$) from {\tt lung73.sb} and write them
 back to {\tt lung73.pvclust}, we do
 \begin{Schunk}
 \begin{Sinput}
@@ -459,7 +463,7 @@ To see the results, we simply plot the dendrogram
 \begin{figure}
 \begin{center}
 \includegraphics{usesb-022}
-\caption{Dendrogram of lung73 dataset}\label{fig:lung73tree}
+\caption{Dendrogram of lung73 dataset ($k=3$)}\label{fig:lung73tree}
 \end{center}
 \end{figure}
 To calculate $p_2$ instead of $p_3$, specify {\tt k=2},
@@ -548,13 +552,13 @@ Also plots are shown (Fig.~\ref{fig:lung73nodes}) by
 \subsection{CONSEL Software}
 
 {\tt scaleboot} has a front end for phylogenetic inference, and it may
-eventually replace {\tt CONSEL} software (Shimodaira and Hasegawa
+eventually replace the {\tt CONSEL} software (Shimodaira and Hasegawa
 2001) for testing phylogenetic trees. Currently, {\tt scaleboot} does
-not have a method for file conversion of several phylogenetic
-software, and so we must use {\tt CONSEL} for this purpose before
-applying {\tt scaleboot} to calculate an improved version of AU
-p-values for trees and edges.  See {\tt help(mam15)} for further
-details of the following example.
+not have a method for converting files obtained from other commonly
+used phylogenetic software packages, and so we must use {\tt CONSEL}
+for this purpose before applying {\tt scaleboot} to calculate an
+improved version of AU $p$-values for trees and edges.  See {\tt
+help(mam15)} for further details of the following example.
 
 \subsection{Mammal Dataset}
 
@@ -597,7 +601,7 @@ We  consider $m=15$ tree topologies of the six mammals ({\tt mam15.tpl});
 The maximum likelihood estimates for these trees are calculated by
 PAML (Yang 1997).  Let $x_{ij}$ be the site-wise log-likelihood for
 sites $i=1,\ldots,n$, and trees $j=1,\ldots,m$. The log-likelihood of
-tree-$j$ is $\sum_{i=1}^n x_{ij}$. The large $n$ justifies the central
+tree-$j$ is $\sum_{i=1}^n x_{ij}$. A large $n$ justifies the central
 limit theorem for $y=\bar x$, and allows us to resample $x_{ij}$
 directly without recalculation of the maximum likelihood
 estimates. The matrix $X=(x_{ij})$ is produced by PAML and stored in
@@ -646,19 +650,19 @@ part of {\tt mam15.log} is as follows.
 10 6
           
     123456
-  1 +++---  ; (0.2000)
-  2 ++++--  ; (0.2000)
-  3 +--+--  ; (0.2000)
-  4 -+++--  ; (0.2000)
-  5 ---++-  ; (0.2000)
-  6 +--++-  ; (0.2000)
-  7 -++++-  ; (0.2000)
-  8 +++-+-  ; (0.2000)
-  9 +---+-  ; (0.2000)
- 10 -++-+-  ; (0.2000)
+  1 +++---  ;
+  2 ++++--  ;
+  3 +--+--  ;
+  4 -+++--  ;
+  5 ---++-  ;
+  6 +--++-  ;
+  7 -++++-  ;
+  8 +++-+-  ;
+  9 +---+-  ;
+ 10 -++-+-  ;
 \end{verbatim}
-The above defines clusters (edges) named e1,...e10. For example, e1 =
-{\tt +++---} = (Homsa, Phovi, Bosta).
+The clusters (edges) defined above are named e1,...,e10. For example,
+e1 = {\tt +++---} = (Homsa, Phovi, Bosta).
 
 The AU $p$-values for clusters as well as trees are calculated simply by
 \begin{Schunk}
@@ -692,8 +696,8 @@ The results for trees are extracted by
 \end{Schunk}
 
 We have used a cluster computer of 40 cpus for parallel computing
-using {\tt snow} package.  The following code may take only 10
-minutes, although we have used the number of resamples ten times
+using the {\tt snow} package.  The following code may take only 10
+minutes, although we have used the number of resamples 10 times
 larger than the default value.
 \begin{Schunk}
 \begin{Sinput}
@@ -737,21 +741,21 @@ t12  0.00 (0.00)  0.00 (0.00)  0.00 (0.00)  0.00 (0.00) poly.3  -19.61
 \end{Soutput}
 \end{Schunk}
 
-Next we look at $p$-values. We confirm that $p_1$ (the second column)
-is almost the same as the raw BP (the first column); this should be so
-if the model fitting is good. Only two trees, i.e., t1 and t3, have
-$p_1>0.05$. It is known that the bias of $p_1$ is large so that often
-leads to false positives for tree selection. $p_2$ improves $p_1$ by
-correcting the bias. Six trees, i.e., t1, t3, t2, t5, t6, and t4, have
-$p_2>0.05$. $p_3$ improves $p_2$ even more, although the trees of
-$p_3>0.05$ are the same six trees in this example.
+Next we look at the $p$-values. We confirm that $p_1$ (the second
+column) is almost the same as the raw BP (the first column); this
+should be so if the model fitting is good. Only two trees, i.e., t1
+and t3, have $p_1>0.05$. It is known that the bias of $p_1$ is large
+so that often leads to false positives for tree selection. $p_2$
+improves upon $p_1$ by correcting the bias. Six trees, i.e., t1, t3,
+t2, t5, t6, and t4, have $p_2>0.05$. $p_3$ improves upon $p_2$ even
+more, although the trees of $p_3>0.05$ are the same six trees in this
+example.
 
-
-Finally we examine model fitting.  According to AIC values, the
+Finally we examine model fitting.  According to the AIC values, the
 fitting is good overall except for the top two trees; however note
 that the AIC values should be about 10 times smaller if the default
-nb=10,000 were used.  The fitting curves for the top four trees are
-shown (Fig.~\ref{fig:mamplots}) by
+value of nb=10,000 was used.  The fitting curves for the top four
+trees are shown (Fig.~\ref{fig:mamplots}) by
 \begin{Schunk}
 \begin{Sinput}
 > plot(mam15.trees[1:4])
@@ -763,9 +767,8 @@ shown (Fig.~\ref{fig:mamplots}) by
 \caption{Model fitting for the top four trees}\label{fig:mamplots}
 \end{center}
 \end{figure}
-According to the plots, the fitting is rather good even to the top two
+According to the plots, the fitting is rather good even for the top two
 trees. 
-
 
 \begin{thebibliography}{9}
 
@@ -805,7 +808,7 @@ Shimodaira, H. and Hasegawa, M. (2001)
 
 \bibitem{bib:SS2006}
 Suzuki, R. and Shimodaira, H. (2006)
-\newblock pvclust: An R package for hierarchical clustering with p-values.
+\newblock pvclust: An R package for hierarchical clustering with $p$-values.
 \newblock \emph{Bioinformatics} {\bf 22} 1540--1542 (software is available from
 \url{http://www.is.titech.ac.jp/~shimo/prog/pvclust/}).
 

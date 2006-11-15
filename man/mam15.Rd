@@ -56,14 +56,14 @@ mam15.relltest
 ((Homsa,Musmu),((Phovi,Bosta),Orycu),Didvi); t15
 }  
 
-  The log-likelihood values are calculated by PAML software (Ziheng 1997)
+  The log-likelihood values are calculated using the PAML software (Ziheng 1997)
   for phylogenetic inference. The two files \file{mam15.aa} and
   \file{mam15.tpl} are fed into PAML to generate the file
   \file{mam15.lnf} of site-wise log-likelihood values.
 
-  Using CONSEL software (Shimodaira and Hasegawa 2001), we convert
-  \file{mam15.lnf} and \file{mam15.tpl} to be suitable for scaleboot
-  package. Here, we do not use CONSEL for calculating AU p-values, but
+  Using the CONSEL software (Shimodaira and Hasegawa 2001), we convert
+  \file{mam15.lnf} and \file{mam15.tpl} to a format suitable for the \pkg{scaleboot}
+  package. We do not use CONSEL for calculating AU p-values, but
   use it only for file conversion. We type
 
 \preformatted{
@@ -91,22 +91,22 @@ treeass --outgroup 6 mam15.tpl > mam15.log
 10 6
           
     123456
-  1 +++---  ; (0.2000)
-  2 ++++--  ; (0.2000)
-  3 +--+--  ; (0.2000)
-  4 -+++--  ; (0.2000)
-  5 ---++-  ; (0.2000)
-  6 +--++-  ; (0.2000)
-  7 -++++-  ; (0.2000)
-  8 +++-+-  ; (0.2000)
-  9 +---+-  ; (0.2000)
- 10 -++-+-  ; (0.2000)
+  1 +++---  ;
+  2 ++++--  ;
+  3 +--+--  ;
+  4 -+++--  ;
+  5 ---++-  ;
+  6 +--++-  ;
+  7 -++++-  ;
+  8 +++-+-  ;
+  9 +---+-  ;
+ 10 -++-+-  ;
 }
 
-  The above defines edges named e1,...e10 (base edges) as clusters of six
+  The above defines edges named e1,...e10 (base edges) as clusters for six
   mammal species. For example, e1 = +++--- = (Homsa, Phovi, Bosta).
 
-  The converted files are read by scaleboot package in R:
+  The converted files are read by the \pkg{scaleboot} package in \R:
 
 \preformatted{  
 mam15.mt <- read.mt("mam15.mt")
@@ -114,8 +114,8 @@ mam15.ass <- read.ass("mam15.ass")
 }
 
   \code{mam15.mt} is a matrix of size 3414 * 6 for the site-wise
-  log-likelihood values. For testing trees, we need \code{mam15.mt} but
-  \code{mam15.ass}.  \code{mam15.ass} is used for testing edges, and is
+  log-likelihood values. For testing trees, we need only \code{mam15.mt}.
+  \code{mam15.ass} is used for testing edges, and it is
   a list of length 25 for association vectors for t1,t2,...,t15, and
   e1,e2,...,e10.  For example, \code{mam15.ass$t1 = 1}, indicating tree
   "t1" is included in tree "t1", and \code{mam15.ass$e1 = c(1, 5, 8)},
@@ -133,30 +133,30 @@ summary(mam15.trees) # calculates AU p-values
   It calls the function \code{\link{scaleboot}} internally with
   the number of bootstrap replicates \code{nb=10000}, and takes about 20
   mins. Typically, \code{nb=10000} is large enough, but it would be safe
-  to use larger value, say \code{nb=100000} as in the Examples below.
+  to use larger value, say \code{nb=100000} as in the examples below.
   
-  Note that the default value of scales in \code{\link{relltest}} ranges
-  much wider than that of CONSEL. It is
+  Note that the default value of scales in \code{\link{relltest}} has
+  a much wider range than that of CONSEL. It is
   \code{sa=9^seq(-1,1,length=13)} for \code{\link{relltest}}, and
   is \code{sa=1/seq(from=0.5,to=1.4,by=0.1)} for CONSEL.
 
   The \code{mam15.relltest} object in \code{data(mam15)} is similar
-  to \code{mam15.trees} above, but is calculated also for
+  to \code{mam15.trees} above, but is also calculated for
   edges using \code{mam15.ass}. We can extract the result for trees by
 \preformatted{
 mam15.trees <- mam15.relltest[1:15]
 }
   
-  The results for trees stored in \code{mam15.trees} object above are in
+  The results for trees stored in the \code{mam15.trees} object above are in
   the order specified in the columns of \code{mam15.mt}. To sort it by
-  increasing order of log-likelihood difference, we can type
+  increasing order of the log-likelihood difference, we can type
 \preformatted{
 stat <- attr(mam15.trees,"stat")  # the log-likelihood differences
 o <- order(stat) # sort it in increasing order
 mam15.trees <- mam15.trees[o] # same as mam15.trees in Examples
 }
 
-  The results of fitting are shown by the \code{print} method.
+  Results of the fitting are shown by using the \code{print} method.
 \preformatted{
 > mam15.trees
 
@@ -252,8 +252,8 @@ t12  0.00 (0.00)  0.00 (0.00)  0.00 (0.00)  0.00 (0.00) poly.3  -19.61
   third-order AU p-value of CONSEL, and finally "k.3" is an improved
   version of AU p-value.
 
-  The details for each tree are shown by extracting the element. For
-  example, the details for the seventh-largest tree in the
+  The details for each tree are shown by extracting the corresponding element. For
+  example, details for the seventh largest tree in the
   log-likelihood value ("t4") is obtained by
 \preformatted{
 > mam15.trees[[7]] # same as mam15.trees$t4
@@ -300,13 +300,14 @@ Best Model:  sing.3
 
 > plot(mam15.trees[[7]],legend="topleft")
 }  
-  Especially, the plot diagnostics in the bottom line is useful
-  to confirm which model is fitting best.
+
+  The plot diagnostics found in the bottom line are especially useful
+  for confirming which model is fitting best.
 
   See other examples below.
 }
 \note{
-  Dataset files for the phylogenetic inference are found at
+  Dataset files for phylogenetic inference are found at
   \url{http://www.is.titech.ac.jp/~shimo/prog/scaleboot/}.
   For Unix users, download \file{mam15-files.tgz}, and for Windows users
   download \file{mam15-files.zip}.  This dataset

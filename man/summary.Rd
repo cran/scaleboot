@@ -21,22 +21,22 @@
   \item{k}{numeric vector of \eqn{k} for calculating p-values.}
   \item{s}{\eqn{\sigma_0^2}}
   \item{sp}{\eqn{\sigma_p^2}}
-  \item{...}{further arguments passed to or from other methods.}  
+  \item{...}{further arguments passed to and from other methods.}  
 }
 
 \details{ For each model, a class of approximately unbiased p-values,
-indexed by \eqn{k=1,2,...}, is calculaed.  The p-values are named as
+indexed by \eqn{k=1,2,...}, is calculaed.  The p-values are named 
 \code{k.1}, \code{k.2}, ..., where \eqn{k=1} (\code{k.1}) corresponds to
 the ordinary bootstrap probability, and \eqn{k=2} (\code{k.2})
-corresponds to the third-order accurate p-value of Shimodaira (2002). As
+corresponds to the third-order accurate p-value of Shimodaira (2002). As the
 \eqn{k} value increases, the bias of testing decreases, although the
 p-value becomes less stable numerically and the monotonicity of rejection
 regions becomes worse. Typically, \eqn{k=3} provides a reasonable
-compromise. \code{\link{sbpval}} method is available to extract p-values from
-\code{"summary.scaleboot"} object.
+compromise. The \code{\link{sbpval}} method is available to extract p-values from
+the \code{"summary.scaleboot"} object.
 
 The p-value is defined as
-  \deqn{ \hat\alpha_{k,\sigma_0} = 1 - \Phi\left( \sum_{j=0}^{k-1}
+  \deqn{ p_k = 1 - \Phi\left( \sum_{j=0}^{k-1}
 \frac{(\sigma_p^2-\sigma_0^2)^j}{j!}  \frac{d^j \psi(x|\beta)}{d
 x^j}\Bigr|_{\sigma_0^2} \right),} where \eqn{\psi(\sigma^2|\beta)} is the
 model specification function, \eqn{\sigma_0^2} is the evaluation point
@@ -46,16 +46,16 @@ parameter. Typically, we do not change the default values
 
 The p-values are justified only for good fitting models. By default,
 the model which minimizes the AIC value is selected. We can modify the
-AIC value by \code{sbaic} function. We also diagnose the fitting by the
-\code{plot} method.
-
-} \value{
+AIC value by using the \code{sbaic} function. We also diagnose the
+fitting by using the \code{plot} method.
+}
+\value{
   \code{summary.scaleboot} returns
-  an object of class \code{"summary.scaleboot"} inheriting from class
-  \code{"scaleboot"}. It is a list containing all the components of class
+  an object of the class \code{"summary.scaleboot"}, which is inherited
+  from the class \code{"scaleboot"}. It is a list containing all the components of class
   \code{"scaleboot"} and the following components:
   \item{pv}{matrix of p-values of size \code{length(models)} *
-    \code{length(k)} with elements \eqn{\hat\alpha_{k,\sigma_0}}.}
+    \code{length(k)} with elements \eqn{p_k}.}
   \item{pe}{matrix of standard errors of p-values.}
   \item{best}{ a list consisting of components \code{model} for the best
   fitting model name, \code{aic} for its AIC value, \code{pv} for a

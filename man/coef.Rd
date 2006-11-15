@@ -20,10 +20,10 @@ Extract the estimated parameters from \code{"scaleboot"} or
   \item{sd}{logical. Should standard errors be returned as well?}
 }
 \value{
-  \code{coef} method for class \code{"scaleboot"} returns a matrix consisting
-  of row vectors of beta's for models. If \code{sd=TRUE}, it
-  returns a list with components \code{estimate} and \code{sd} for the
-  beta matrix and its standard error respectively.
+  The \code{coef} method for the class \code{"scaleboot"} returns a
+  matrix consisting of row vectors of beta's for models. If
+  \code{sd=TRUE}, it returns a list with components \code{estimate} and
+  \code{sd} for the beta matrix and its standard error respectively.
 }
 \author{Hidetoshi Shimodaira}
 \seealso{\code{\link{sbfit}}}
