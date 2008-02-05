@@ -1,6 +1,6 @@
 ##
 ##  scaleboot: R package for multiscale bootstrap
-##  Copyright (C) 2006 Hidetoshi Shimodaira
+##  Copyright (C) 2006-2007 Hidetoshi Shimodaira
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
@@ -32,19 +32,28 @@
 ## psi : function(beta,s)
 ## inits : matrix of initial beta's
 ## mag : vector of magnification factor for beta
+## omg: weights for penality of regularization term
+## trg: target values of parameters of regularlization term
 
-sbfit1 <- function(bp,nb,sa,psi,inits,mag=1,
+sbfit1 <- function(bp,nb,sa,psi,inits,mag=1,omg=NULL,trg=NULL,
                    method=NULL,control=NULL) {
   ss <- sqrt(sa)
-  lik <- function(par)
+  lik <- function(par) # (-1)* log likelihood function
     likbinom(pnorm(-sapply(sa,function(s) psi(mag*par,s))/ss),bp,nb)
+  if(!is.null(omg)) {
+    if(is.null(trg)) trg <- 0
+    obj <- function(par) lik(par)+sum(omg*(mag*par-trg)^2)
+  } else obj <- lik
   chkcoef <- function(par) {
     y <- psi(mag*par,check=TRUE)
     if(!is.null(y)) y$par <- y$beta/mag
     y
   }
-  fit <- optims(inits,lik,method=method,control=control,chkcoef=chkcoef)
+  fit <- optims(inits,obj,method=method,control=control,chkcoef=chkcoef)
+  fit$inits <- inits
   fit$mag <- mag
+  fit$omg <- omg
+  fit$trg <- trg
   fit
 }
 
@@ -89,9 +98,10 @@ likbinom <- function(pr,bp,nb) {
 ## k : degree for corrected p-value (default: k=1)
 ## s : sigma^2 for corrected p-value (default: s=1)
 ## sp : sigma^2 for prediction (default: sp=-1)
+## lambda : mixing bayes (lambda=0) and freq (lambda=1)
 
-sbpv1 <- function(fit,psi,k=1,s=1,sp=-1) {
-  pval <- function(par) pnorm(-psi(fit$mag*par,s,k=k,sp=sp))
+sbpv1 <- function(fit,psi,k=1,s=1,sp=-1,lambda=0) {
+  pval <- function(par) pnorm(-psi(fit$mag*par,s,k=k,sp=sp,lambda=lambda))
   pv <- pval(fit$par)
   h <- nderiv(pval,fit$par)
   pe <- sqrtx(h %*% fit$var %*% h)
@@ -177,12 +187,20 @@ sbfindroot <- function(x0,y0,x,y,w=rep(1,length(x)),tol=0) {
 ##  value : the minimum returned value.
 ##  init : the initial value for the minimum returned value.
 optims <- function(coefs,fn,chkcoef=NULL,eps=1e-3,...) {
+  coef0 <- pos <- numeric(0) # used as global variables in this function
+  op <- sboptions()
+  if(op$debug) {
+    cat("########## optims\n")
+    print(coefs)
+  }
+  
   ## objective function with constraints
   fn1 <- function(coef) {
+    ## coef0 is used as a container, where only pos are changed    
     coef0[pos] <- coef
     fn(coef0)
   }
-  ## optim1: one-dimensional optimization
+  ## optim1: one-dimensional optimization; length(pos)==1
   optim1 <- function(coef) {
     fit <- optimize(fn1,c(coef-10,coef+10))
     x0 <- fit$minimum
@@ -191,37 +209,62 @@ optims <- function(coefs,fn,chkcoef=NULL,eps=1e-3,...) {
     hess <- ((fp-f0)-(f0-fm))/(eps*eps)
     list(par=x0,value=f0,hessian=hess)
   }
-  ## optim2: switch optim1 and optim
+  ## optim2: switch optim1 and optim depending on length(pos)
   optim2 <- function(coef) {
-    if(length(coef)!=length(pos)) stop("internal error")
-    if(length(coef)>=2) optim(coef,fn1,hessian=T,...)
-    else optim1(coef)
+    len <- length(coef)
+    if(len!=length(pos)) stop("internal error")
+    if(len>=2) {
+      f <- optim(coef,fn1,hessian=T,...)
+    } else if(len==1) {
+      f <- optim1(coef)
+    } else {
+      return(list(par=NULL,value=fn(coef0)))
+    }
+    f
   }
 
   ## use each column as a initial parameter vector
   coefs <- as.matrix(coefs)
   m <- ncol(coefs); len <- nrow(coefs)
-  coef0 <- rep(0,len); pos <- seq(length=len)
-  fit0 <- list(par=coefs[,1],value=fn(coefs[,1])+1,init=coefs[,1])
+  fit0 <- list(value=Inf)
   for(i in 1:m) {
-    fit <- optim2(coefs[,i])
-    fit$init <- coefs[,i]
-    if(fit$value<fit0$value) fit0 <- fit
+    coef0 <- init <- coefs[,i]
+    pos <- 1:len
+    mask <- rep(T,len)
+    if(is.null(chkcoef)) {
+      fit <- optim2(coef0) # unconstrained optimizaiton
+    } else {
+      for(j in 1:(len+1)) { # should not be repeated more than len+1
+        par <- coef0[pos]
+        fit <- optim2(par)
+        if(length(pos)>0) coef0[pos] <- fit$par
+        y <- chkcoef(coef0)
+        if(op$debug) {
+          cat("##### ",j,"\n")
+          print(pos)
+          print(mask)
+          print(coef0)
+          print(y)
+          print(fit)
+        }
+        if(is.null(y)) break
+        coef0 <- y$par
+        if(all(y$mask == mask)) break
+        mask <- y$mask; pos <- which(y$mask)        
+      }
+      fit$par <- coef0
+    }
+    fit$init <- init
+    fit$pos <- pos
+    fit$mask <- mask
+    if(fit$value<=fit0$value) fit0 <- fit
   }
-  ## modify the optimal parameter if necessary
-  if(!is.null(chkcoef) && !is.null(y <- chkcoef(fit0$par))) {
-    coef0 <- y$par; pos <- which(y$mask)
-    ## length(pos)>0 is assumed here...
-    fit0 <- optim2(y$par[y$mask])
-    coef0[pos] <- fit0$par
-    fit0$par <- coef0
-    fit0$mask <- y$mask
-    fit0$var <- matrix(0,len,len)
-    fit0$var[pos,pos] <- solvex(fit0$hessian)
-  } else {
-    fit0$mask <- rep(T,len)
-    fit0$var <- solvex(fit0$hessian)
+  if(op$debug) {
+    cat("#####\n")
+    print(fit0)
   }
+  fit0$var <- matrix(0,len,len)
+  if(length(fit0$pos)>=1) fit0$var[fit0$pos,fit0$pos] <- solvex(fit0$hessian)
   names(fit0$par) <- rownames(coefs)
 
   fit0
@@ -264,6 +307,41 @@ sqrtx <- function(x) {
 ## expsx and logsx (exp for large x, linear for small x)
 expsx <- function(x) sign(x)*(exp(abs(x))-1)
 logsx <- function(x) sign(x)*log(abs(x)+1)
+
+## qnorm2
+qnorm2 <- function(x) {
+  x[x>1] <- 1
+  x[x<0] <- 0
+  qnorm(x)
+}
+
+## weighted average of z-values
+wsumzval <- function(z,w) {
+  i0 <- order(-w)[1] # argmax(w)
+  wsum <- function(x) {
+    lowtail <- x[i0] < 0
+    qnorm(sum(w*pnorm(x,lower.tail=lowtail)),lower.tail=lowtail)
+  }
+  if(is.array(z)) apply(z,1:(length(dim(z))-1),wsum)
+  else wsum(z)
+}
+
+## wzval for difference models (poa and sia)
+## out=-qnorm(pnorm(-z1) + w*pnorm(-z2))
+## =qnorm2(pnorm(z1) - w*pnorm(-z2) ) 
+wzval <- function(z1,z2,w) {
+  if(z1>0) {
+    p <- pnorm(-z1) + w*pnorm(-z2)
+    if(p>1) p <- 2-p
+    else if(p<0) p <- 0
+    -qnorm(p)
+  } else {
+    p <- pnorm(z1) - w*pnorm(-z2)
+    if(p<0) p <- -p
+    else if(p>1) p <- 1
+    qnorm(p)
+  }
+}
 
 ## nderiv: numerical derivative
 nderiv <- function(fn,x,k=1,eps=1e-3) {
@@ -318,7 +396,7 @@ catmat <- function(x,rn=rownames(x),cn=colnames(x),sep=" ",file="") {
 
 ## catpval
 ## internal for print pval
-catpval <- function(pv,pe,digits=NULL) {
+catpval <- function(pv,pe,digits=NULL,lambda=NULL) {
   op <- sboptions()
   if(is.null(digits)) digits <- op$digits.pval
   if(op$percent) {
@@ -330,7 +408,12 @@ catpval <- function(pv,pe,digits=NULL) {
     if(missing(pe)) value <- myformat(pv,digits=digits+2)
     else value <- myformat(pv,pe,digits=digits+2)
   }
-  list(name=name,value=value)
+  if(!is.null(lambda)) {
+    if(lambda==0) lambda <- "Bayesian"
+    else if(lambda==1) lambda <- "Frequentist"
+  }
+  
+  list(name=name,value=value,lambda=lambda)
 }
 
 

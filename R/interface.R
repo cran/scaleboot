@@ -1,6 +1,6 @@
 ##
 ##  scaleboot: R package for multiscale bootstrap
-##  Copyright (C) 2006 Hidetoshi Shimodaira
+##  Copyright (C) 2006-2007 Hidetoshi Shimodaira
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
@@ -31,16 +31,13 @@ sbfit.pvclust <- function(x,...)
 ## y <- sbfits(x.old)
 ## x.new <- mbpvclust(x.old,y) # use "k.2"
 ## x.new <- mbpvclust(x.old,y,k=3) # use "k.3"
-sbpvclust <- function(x,mbs,k=3,k.bp=1,...) {
-  a <- summary(mbs,k=c(k.bp,k),...)
-  pv.bp <- sapply(a,function(s) s$best$pv[1])
-  pe.bp <- sapply(a,function(s) s$best$pe[1])
-  pv <- sapply(a,function(s) s$best$pv[2])
-  pe <- sapply(a,function(s) s$best$pe[2])
+sbpvclust <- function(x,mbs,k=3,select="average",...) {
+  a <- summary(mbs,k=k,...)
+  selpv <- selectpv(a,select)
+  pv <- sapply(selpv$pvpe,function(b) b$pv)  
+  pe <- sapply(selpv$pvpe,function(b) b$pe)  
   x$edges[,"au"] <- pv
   x$edges[,"se.au"] <- pe
-  x$edges[,"bp"] <- pv.bp
-  x$edges[,"se.bp"] <- pe.bp
   x
 }
 

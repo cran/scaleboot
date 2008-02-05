@@ -11,8 +11,9 @@
 }
 \usage{
 
-\method{plot}{scaleboot}(x, models = names(x$fi),
-     k=NULL, s=NULL, sp=NULL, xval = c("square", "inverse","sigma"),
+\method{plot}{scaleboot}(x, models=NULL, select=NULL, sort.by=c("aic","none"),
+     k=NULL, s=NULL, sp=NULL, lambda=NULL,
+     xval = c("square", "inverse","sigma"),
      yval = c("psi", "zvalue", "pvalue"), xlab = NULL,
      ylab = NULL,log.xy = "", xlim = NULL, ylim = NULL,
      add = F, length.x = 300, main=NULL,
@@ -20,16 +21,16 @@
      pch = 1, cex = 1, pt.col = col[1],pt.lwd = lwd[1],
      legend.x = NULL, inset = 0.1, ...)
 
-\method{plot}{summary.scaleboot}(x, models="best",
-     k=x$parex$k,s=x$parex$s,sp=x$parex$sp, ...)
+\method{plot}{summary.scaleboot}(x, select="average",
+     k=x$parex$k,s=x$parex$s,sp=x$parex$sp,lambda=x$parex$lambda, ...)
 
 
-\method{plot}{scalebootv}(x,models=attr(x,"models"),...)
+\method{plot}{scalebootv}(x,models=attr(x,"models"),sort.by="none",...)
 
-\method{plot}{summary.scalebootv}(x, models="best",...)
+\method{plot}{summary.scalebootv}(x, select="average",...)
 
 
-\method{lines}{scaleboot}(x,z,models=names(x$fi), k=NULL,s=NULL,sp=NULL,
+\method{lines}{scaleboot}(x,z,models=names(x$fi), k=NULL,s=NULL,sp=NULL,lambda=NULL,
       length.x=z$length.x, col=z$col,lty=z$lty,lwd=z$lwd,... )
 
 sblegend(x="topright",y=NULL,z,inset=0.1,...)
@@ -41,12 +42,13 @@ sblegend(x="topright",y=NULL,z,inset=0.1,...)
     \code{x} is a numeric or character such as "lefttop" or "righttop", which
     is passed to \code{legend}.
   }
-  \item{models}{character vector of model names. If numeric,
-    \code{names(object$fi)[models]} is used for each \code{"scaleboot"}
-    object.}
+  \item{models}{character vector of model names. Numeric is also allowed.}
+  \item{select}{"average", "best", or one of the fitted models.}
+  \item{sort.by}{"aic" or "none".}
   \item{k}{k for extrapolation.}
   \item{s}{s for extrapolation.}
   \item{sp}{sp for extrapolation.}
+  \item{lambda}{a numeric of specifying the type of p-values; Bayesian (lambda=0) Frequentist (lambda=1).}
   \item{xval}{specifies x-axis.
     "square" for \eqn{\sigma^2},
     "inverse" for \eqn{1/\sigma},
@@ -93,6 +95,8 @@ plot(a,xval="inverse",yval="zvalue",
      legend="topleft") # x=1/sigma, y=z-value
 plot(a,xval="sigma",log="x",yval="pvalue",
      legend="topleft") # x=log(sigma), y=probability
+## plot of extrapolation
+plot(summary(a),legend="topleft")
 ## multiple plots
 b <- mam15.relltest[1:15] # an object of class "scalebootv"
 plot(b) # x=sigma^2, y=psi

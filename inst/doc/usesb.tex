@@ -1,7 +1,7 @@
 % scaleboot/vignette.tex shimo@is.titech.ac.jp
-% $Id: usesb.Rnw,v 1.6 2006/11/14 15:08:10 shimo Exp $
+% $Id: usesb.Rnw,v 1.9 2008/02/05 03:45:53 shimo Exp $
 %%\VignetteIndexEntry{Multiscale Bootstrap using Scaleboot Package}
-\def\documentid{\getTime-stamp: "2006-11-15 00:07:40 shimo"}
+\def\documentid{\getTime-stamp: "2008-02-05 12:42:27 shimo"}
 \def\getTime-stamp: "#1"{#1}
 
 \documentclass[a4paper]{amsart}
@@ -14,8 +14,7 @@
 
 \title{Multiscale Bootstrap using Scaleboot Package}
 \author{Hidetoshi Shimodaira}
-\thanks{This document is a part of the {\tt scaleboot} package.
-The source file is usesb.Rnw (\documentid).
+\thanks{This document is a part of the {\tt scaleboot} package (Version 0.3-2 or newer). The source file is usesb.Rnw (\documentid).
 I thank Paul A. Sheridan for his comments to improve the manuscript.}
 \address{Department of Mathematical and Computing Sciences\\
 Tokyo Institute of Technology\\
@@ -38,11 +37,13 @@ phylogenetic inference and as the R add-on package {\tt pvclust}
 (Suzuki and Shimodaira 2006) for hierarchical clustering. The point of
 the {\tt scaleboot} package is to calculate an improved version of the
 AU $p$-value that is justified even for hypotheses with nonsmooth
-boundaries (Shimodaira 2006).
+boundaries (Shimodaira 2008).
 
 The basic usage of this package is illustrated in a simple example
 below.  Then real applications in hierarchical clustering and
 phylogenetic inference are shown later.
+
+For the use of {\tt scaleboot}, Shimodaira (2008) may be referenced.
 
 \section{Install}
 
@@ -178,38 +179,76 @@ are generated internally.  It takes a few minutes on a pc.
 > X.sb <- scaleboot(X, nb, sa, countw, mc1)
 \end{Sinput}
 \end{Schunk}
-The result is shown by
+The main result (for $k=3$) is shown by
 \begin{Schunk}
 \begin{Sinput}
 > summary(X.sb)
 \end{Sinput}
 \begin{Soutput}
-Raw Bootstrap Probability:  0.98 (0.10) 
+Raw Bootstrap Probability (scale=1) : 0.98 (0.10)
 
-Corrected P-values (percent):
-       k.1         k.2          k.3          aic     
-poly.1 0.07 (0.00)  0.07 (0.00)  0.07 (0.00) 3666.22 
-poly.2 1.05 (0.05)  6.59 (0.35)  6.59 (0.35)  198.16 
-poly.3 1.21 (0.05) 15.03 (0.95) 18.37 (1.30)   17.23 
-sing.3 1.03 (0.04) 17.67 (0.74) 40.71 (1.47)  -18.05 
+Corrected P-values for Models (percent,Frequentist):
+       k.3          beta0       aic     weight 
+sing.3 39.42 (2.58) 1.10 (0.14)  -12.96 100.00 
+poly.3 18.35 (1.30) 1.61 (0.03)   18.66        
+poly.2  6.59 (0.35) 1.91 (0.02)  199.21        
+poly.1  0.07 (0.00) 3.20 (0.02) 3668.27        
 
 Best Model:  sing.3 
+
+Corrected P-values by the Best Model and by Akaike Weights Averaging:
+        k.3          beta0       
+best    39.42 (2.58) 1.10 (0.14) 
+average 39.42 (2.58) 1.10 (0.14) 
+\end{Soutput}
+\end{Schunk}
+We can also see additional results by specifying $k$,
+\begin{Schunk}
+\begin{Sinput}
+> summary(X.sb, k = 1:3)
+\end{Sinput}
+\begin{Soutput}
+Raw Bootstrap Probability (scale=1) : 0.98 (0.10)
+
+Corrected P-values for Models (percent,Frequentist):
+       k.1         k.2          k.3          beta0       aic     weight 
+sing.3 1.04 (0.04) 17.52 (0.79) 39.42 (2.58) 1.10 (0.14)  -12.96 100.00 
+poly.3 1.21 (0.05) 15.01 (0.95) 18.35 (1.30) 1.61 (0.03)   18.66        
+poly.2 1.05 (0.05)  6.59 (0.35)  6.59 (0.35) 1.91 (0.02)  199.21        
+poly.1 0.07 (0.00)  0.07 (0.00)  0.07 (0.00) 3.20 (0.02) 3668.27        
+
+Best Model:  sing.3 
+
+Corrected P-values by the Best Model and by Akaike Weights Averaging:
+        k.1         k.2          k.3          beta0       
+best    1.04 (0.04) 17.52 (0.79) 39.42 (2.58) 1.10 (0.14) 
+average 1.04 (0.04) 17.52 (0.79) 39.42 (2.58) 1.10 (0.14) 
 \end{Soutput}
 \end{Schunk}
 
 A class of AU $p$-values $p_k$ indexed by $k=1,2,3$, are calculated,
 and they are labelled as {\tt k.1}, {\tt k.2}, and {\tt k.3}.  The
 $p$-values are shown in percent, and the standard errors are given in
-parentheses.  We should look at the row of {\tt sing.3} as indicated
-as the best model in terms of AIC, and we can ignore the other
-rows. $p_1\approx 1\%$ corresponds to the ordinary BP, and $p_2\approx
-18\%$ corresponds to the AU $p$-value of Shimodaira (2002).  What we
-recommend to use here is $p_3\approx41\%$; this is the AU $p$-value of
-Shimodaira (2006).  For this particular example, the common practice
-for calculating a $p$-value is to use the multiple comparisons
-method. If it is applied to $y$, the $p$-value is $p=66\%$, which is
-rather close to $p_3$ in our example, whereas $p_1$ is obviously too
-small.
+parentheses.  We should look at the row of {\tt average} (the bottom
+line), and we can ignore the other rows.  $p_1\approx 1\%$ corresponds
+to the ordinary BP, and $p_2\approx 18\%$ corresponds to the AU
+$p$-value of Shimodaira (2002).  What we recommend to use here is
+$p_3\approx40\%$; this is the AU $p$-value of Shimodaira (2008).  For
+this particular example, the common practice for calculating a
+$p$-value is to use the multiple comparisons method. If it is applied
+to $y$, the $p$-value is $p=66\%$, which is rather close to $p_3$ in
+our example, whereas $p_1$ is obviously too small.
+
+Internally, as explained in the next section, several models are
+fitted to the observed bootstrap probabilities. They are sorted in
+increasing order of AIC, and the best model is {\tt sing.3}. The row
+of {\tt sing.3} is duplicated in the row {\tt best}, two lines from
+the bottom. The Akaike weights $\propto \exp(-{\rm AIC}/2)$ are also
+computed for models and the $p$-values are averaged using the weights
+so that we get the row of {\tt average}, the bottom line. Typically,
+the two bottom lines are almost identical, and {\tt average} is
+regarded as a smoothed version of {\tt best} for small changes in
+data.  I recommend to use {\tt average} instead of {\tt best}.
 
 \subsection{Internal Steps}
 
@@ -239,17 +278,17 @@ Scales (Sigma Squared):
 
 Coefficients:
        beta0           beta1           beta2            
-poly.1 3.2017 (0.0182)                                  
-poly.2 1.9077 (0.0217) 0.4004 (0.0069)                  
-poly.3 1.6103 (0.0279) 0.6756 (0.0209) -0.0335 (0.0024) 
-sing.3 0.9280 (0.0287) 1.3860 (0.0203)  1.0000 (0.0000) 
+sing.3 1.0997 (0.1386) 1.2103 (0.1436)  0.8630 (0.1204) 
+poly.3 1.6107 (0.0279) 0.6752 (0.0209) -0.0334 (0.0024) 
+poly.2 1.9076 (0.0217) 0.4004 (0.0069)                  
+poly.1 3.2014 (0.0182)                                  
 
 Model Fitting:
        rss     df pfit   aic     
-poly.1 3690.22 12 0.0000 3666.22 
-poly.2  220.16 11 0.0000  198.16 
-poly.3   37.23 10 0.0001   17.23 
-sing.3    1.95 10 0.9967  -18.05 
+sing.3    7.04 10 0.7214  -12.96 
+poly.3   38.66 10 0.0000   18.66 
+poly.2  221.21 11 0.0000  199.21 
+poly.1 3692.27 12 0.0000 3668.27 
 
 Best Model:  sing.3 
 \end{Soutput}
@@ -285,7 +324,7 @@ $\psi(\sigma^2|\hat\beta)$ as
 \end{Schunk}
 \begin{figure}
 \begin{center}
-\includegraphics{usesb-011}
+\includegraphics{usesb-012}
 \caption{Model Fitting}\label{fig:diag1f}
 \end{center}
 \end{figure}
@@ -298,7 +337,7 @@ The same plot but in other variables can be shown
 \end{Schunk}
 \begin{figure}
 \begin{center}
-\includegraphics{usesb-013}
+\includegraphics{usesb-014}
 \caption{Model Fitting ($x=\log \sigma$, $y=\alpha_{\sigma^2}$)}
 \label{fig:diag1f2}
 \end{center}
@@ -350,7 +389,7 @@ Then the corrected $p$-values are calculated by $p_k=1-\Phi(q_k)$.  By
 default $\sigma_0^2=1$. The calculation of $q_k$ is interpreted as
 extrapolation of $\sigma z_{\sigma^2}$ to $\sigma^2=-1$ by using the
 first $k$ terms of the Taylor series. According to the theory of
-Shimodaira (2006), the unbiased $p$-value is, if it exists, obtained
+Shimodaira (2008), the unbiased $p$-value is, if it exists, obtained
 by taking the limit $k\to\infty$. The extrapolated curves are shown
 (Fig.~\ref{fig:diag1s}) by
 \begin{Schunk}
@@ -360,7 +399,7 @@ by taking the limit $k\to\infty$. The extrapolated curves are shown
 \end{Schunk}
 \begin{figure}
 \begin{center}
-\includegraphics{usesb-015}
+\includegraphics{usesb-016}
 \caption{Extrapolation}\label{fig:diag1s}
 \end{center}
 \end{figure}
@@ -462,7 +501,7 @@ To see the results, we simply plot the dendrogram
 \end{Schunk}
 \begin{figure}
 \begin{center}
-\includegraphics{usesb-022}
+\includegraphics{usesb-023}
 \caption{Dendrogram of lung73 dataset ($k=3$)}\label{fig:lung73tree}
 \end{center}
 \end{figure}
@@ -484,7 +523,7 @@ plot with legend is obtained (Fig.~\ref{fig:lungplot67}) by
 \end{Schunk}
 \begin{figure}
 \begin{center}
-\includegraphics{usesb-025}
+\includegraphics{usesb-026}
 \caption{Model fitting for node 67}\label{fig:lungplot67}
 \end{center}
 \end{figure}
@@ -494,20 +533,25 @@ All the calculated $p$-values for node 67 are given by
 > summary(lung73.sb[[67]])
 \end{Sinput}
 \begin{Soutput}
-Raw Bootstrap Probability:  3.63 (0.19) 
+Raw Bootstrap Probability (scale=1) : 3.63 (0.19)
 
-Corrected P-values (percent):
-       k.1          k.2          k.3          aic      
-poly.1 18.41 (0.10) 18.41 (0.10) 18.41 (0.10) 52878.29 
-poly.2  5.46 (0.09) 83.51 (0.32) 83.51 (0.32)  1356.63 
-poly.3  3.95 (0.08) 86.05 (0.29) 92.56 (0.28)   464.71 
-sing.3  3.31 (0.07) 77.02 (0.47) 95.10 (0.17)    25.11 
+Corrected P-values for Models (percent,Frequentist):
+       k.3          beta0       aic      weight 
+sing.3 95.09 (0.17) 0.07 (0.01)    31.92 100.00 
+poly.3 92.55 (0.28) 0.25 (0.00)   469.86        
+poly.2 83.50 (0.32) 0.31 (0.00)  1359.96        
+poly.1 18.41 (0.10) 0.90 (0.00) 52878.45        
 
 Best Model:  sing.3 
+
+Corrected P-values by the Best Model and by Akaike Weights Averaging:
+        k.3          beta0       
+best    95.09 (0.17) 0.07 (0.01) 
+average 95.09 (0.17) 0.07 (0.01) 
 \end{Soutput}
 \end{Schunk}
-The extrapolation using the best model is shown
-(Fig.~\ref{fig:lungext67}) by
+The extrapolation using the best models (averaged by the Akaike
+weights) is shown (Fig.~\ref{fig:lungext67}) by
 \begin{Schunk}
 \begin{Sinput}
 > plot(summary(lung73.sb[[67]]), legend = "topleft")
@@ -515,7 +559,7 @@ The extrapolation using the best model is shown
 \end{Schunk}
 \begin{figure}
 \begin{center}
-\includegraphics{usesb-028}
+\includegraphics{usesb-029}
 \caption{Extrapolation for node 67}\label{fig:lungext67}
 \end{center}
 \end{figure}
@@ -526,12 +570,12 @@ For a set of nodes, $p$-values are given by
 > summary(lung73.sb[c(62, 67, 69, 71)])
 \end{Sinput}
 \begin{Soutput}
-Corrected P-values (percent):
-   raw          k.1          k.2          k.3          model  aic    
-62 95.68 (0.20) 95.92 (0.10) 98.64 (0.10) 98.61 (0.12) poly.3 -12.01 
-67  3.63 (0.19)  3.31 (0.07) 77.02 (0.47) 95.10 (0.17) sing.3  25.11 
-69 29.49 (0.46) 29.65 (0.17) 75.37 (0.22) 75.83 (0.34) poly.3 -14.09 
-71 25.20 (0.43) 25.95 (0.17) 84.44 (0.18) 85.91 (0.27) poly.3  11.49 
+Corrected P-values by Akaike Weights Averaging (percent,Frequentist):
+   raw          k.3          beta0        model  weight 
+62 95.68 (0.20) 98.69 (0.09) -1.99 (0.02) poly.3  53.87 
+67  3.63 (0.19) 95.09 (0.17)  0.07 (0.01) sing.3 100.00 
+69 29.49 (0.46) 75.84 (0.36) -0.08 (0.00) poly.3  61.23 
+71 25.20 (0.43) 85.92 (0.27) -0.20 (0.00) poly.3  97.73 
 \end{Soutput}
 \end{Schunk}
 Also plots are shown (Fig.~\ref{fig:lung73nodes}) by
@@ -542,7 +586,7 @@ Also plots are shown (Fig.~\ref{fig:lung73nodes}) by
 \end{Schunk}
 \begin{figure}
 \begin{center}
-\includegraphics{usesb-031}
+\includegraphics{usesb-032}
 \caption{Model fitting for a set of nodes} \label{fig:lung73nodes}
 \end{center}
 \end{figure}
@@ -718,26 +762,26 @@ First we sort the results in increasing order of log-likelihood difference,
 > stat <- attr(mam15.trees, "stat")
 > o <- order(stat)
 > mam15.trees <- mam15.trees[o]
-> summary(mam15.trees)
+> summary(mam15.trees, k = 1:3)
 \end{Sinput}
 \begin{Soutput}
-Corrected P-values (percent):
-    raw          k.1          k.2          k.3          model  aic     
-t1  57.58 (0.16) 56.16 (0.04) 74.55 (0.05) 74.55 (0.05) poly.2  964.33 
-t3  31.86 (0.15) 30.26 (0.05) 46.41 (0.09) 45.33 (0.13) poly.3 1306.50 
-t2   3.68 (0.06)  3.68 (0.03) 12.97 (0.20) 16.12 (0.45) sing.3   -6.21 
-t5   1.34 (0.04)  1.33 (0.02)  7.92 (0.25) 10.56 (0.56) sing.3  -14.11 
-t6   3.18 (0.06)  3.15 (0.02) 13.15 (0.21) 15.86 (0.44) sing.3   -2.49 
-t7   0.49 (0.02)  0.52 (0.01)  3.66 (0.21)  4.75 (0.42) sing.3  -12.04 
-t4   1.55 (0.04)  1.53 (0.02) 10.54 (0.27) 14.84 (0.66) sing.3   -7.57 
-t15  0.08 (0.01)  0.07 (0.00)  1.11 (0.19)  1.85 (0.48) sing.3  -17.08 
-t8   0.00 (0.00)  0.00 (0.00)  0.04 (0.03)  0.07 (0.07) sing.3  -13.68 
-t14  0.22 (0.01)  0.23 (0.01)  2.76 (0.26)  4.59 (0.71) sing.3  -10.79 
-t13  0.02 (0.00)  0.01 (0.00)  0.50 (0.20)  1.30 (0.83) sing.3  -15.14 
-t9   0.00 (0.00)  0.00 (0.00)  0.23 (0.05)  1.41 (0.29) sing.3  -15.86 
-t11  0.00 (0.00)  0.00 (0.00)  0.00 (0.00)  0.00 (0.00) poly.3  -19.71 
-t10  0.00 (0.00)  0.00 (0.00)  0.00 (0.00)  0.00 (0.00) poly.3  -17.27 
-t12  0.00 (0.00)  0.00 (0.00)  0.00 (0.00)  0.00 (0.00) poly.3  -19.61 
+Corrected P-values by Akaike Weights Averaging (percent,Frequentist):
+    raw          k.1          k.2          k.3          beta0        model  weight 
+t1  57.58 (0.16) 56.15 (0.04) 74.58 (0.06) 74.59 (0.07) -0.41 (0.00) poly.2  45.91 
+t3  31.86 (0.15) 30.26 (0.05) 46.41 (0.09) 45.33 (0.13)  0.31 (0.00) poly.3 100.00 
+t2   3.68 (0.06)  3.68 (0.03) 12.96 (0.20) 16.11 (0.45)  1.40 (0.01) sing.3 100.00 
+t5   1.34 (0.04)  1.33 (0.02)  7.91 (0.25) 10.55 (0.56)  1.75 (0.02) sing.3  99.89 
+t6   3.18 (0.06)  3.15 (0.02) 13.13 (0.21) 15.77 (0.43)  1.44 (0.01) sing.3  96.55 
+t7   0.49 (0.02)  0.52 (0.01)  3.52 (0.19)  4.35 (0.35)  2.15 (0.02) sing.3  68.88 
+t4   1.55 (0.04)  1.53 (0.02) 10.53 (0.27) 14.81 (0.66)  1.62 (0.02) sing.3  99.80 
+t15  0.08 (0.01)  0.07 (0.00)  1.09 (0.18)  1.79 (0.45)  2.66 (0.06) sing.3  95.97 
+t8   0.00 (0.00)  0.00 (0.00)  0.03 (0.02)  0.05 (0.04)  3.76 (0.13) sing.3  63.58 
+t14  0.22 (0.01)  0.23 (0.01)  2.75 (0.26)  4.55 (0.70)  2.27 (0.04) sing.3  99.85 
+t13  0.02 (0.00)  0.01 (0.00)  0.46 (0.17)  1.12 (0.66)  2.99 (0.14) sing.3  95.77 
+t9   0.00 (0.00)  0.00 (0.00)  0.10 (0.05)  0.41 (0.33)  3.48 (0.18) poly.3  51.04 
+t11  0.00 (0.00)  0.00 (0.00)  0.00 (0.00)  0.00 (0.00)  4.41 (0.14) poly.3  35.46 
+t10  0.00 (0.00)  0.00 (0.00)  0.00 (0.00)  0.00 (0.01)  4.75 (0.35) poly.3  58.72 
+t12  0.00 (0.00)  0.00 (0.00)  0.00 (0.00)  0.00 (0.00)  5.08 (0.39) poly.3  46.22 
 \end{Soutput}
 \end{Schunk}
 
@@ -763,7 +807,7 @@ trees are shown (Fig.~\ref{fig:mamplots}) by
 \end{Schunk}
 \begin{figure}
 \begin{center}
-\includegraphics{usesb-040}
+\includegraphics{usesb-041}
 \caption{Model fitting for the top four trees}\label{fig:mamplots}
 \end{center}
 \end{figure}
@@ -791,13 +835,12 @@ Shimodaira, H.
 \newblock An approximately unbiased test of phylogenetic tree selection.
 \newblock {\em Syst. Biol.} {\bf 51} 492--508.
 
-\bibitem{bib:Shimo:2006:AUT}
-Shimodaira, H.
-(2006)
-\newblock Approximately Unbiased Tests for Singular
-Surfaces via Multiscale Bootstrap Resampling.
-\newblock Research Report {B}-430, Dept. Mathematical and Computing
-  Sciences, Tokyo Institute of Technology, Tokyo.
+\bibitem{bib:Shimo:2008:TRN}
+Shimodaira, H. (2008)
+\newblock Testing Regions with Nonsmooth Boundaries via Multiscale Bootstrap.
+\newblock \emph{Journal of Statistical Planning and Inference}
+{\bf 138} 1227-1241
+(\url{http://dx.doi.org/10.1016/j.jspi.2007.04.001}).
 
 \bibitem{bib:SH1999} 
 Shimodaira, H. and Hasegawa, M. (2001)

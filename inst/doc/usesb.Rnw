@@ -1,7 +1,7 @@
 % scaleboot/vignette.tex shimo@is.titech.ac.jp
-% $Id: usesb.Rnw,v 1.6 2006/11/14 15:08:10 shimo Exp $
+% $Id: usesb.Rnw,v 1.9 2008/02/05 03:45:53 shimo Exp $
 %%\VignetteIndexEntry{Multiscale Bootstrap using Scaleboot Package}
-\def\documentid{\getTime-stamp: "2006-11-15 00:07:40 shimo"}
+\def\documentid{\getTime-stamp: "2008-02-05 12:42:27 shimo"}
 \def\getTime-stamp: "#1"{#1}
 
 \documentclass[a4paper]{amsart}
@@ -14,8 +14,7 @@
 
 \title{Multiscale Bootstrap using Scaleboot Package}
 \author{Hidetoshi Shimodaira}
-\thanks{This document is a part of the {\tt scaleboot} package.
-The source file is usesb.Rnw (\documentid).
+\thanks{This document is a part of the {\tt scaleboot} package (Version 0.3-2 or newer). The source file is usesb.Rnw (\documentid).
 I thank Paul A. Sheridan for his comments to improve the manuscript.}
 \address{Department of Mathematical and Computing Sciences\\
 Tokyo Institute of Technology\\
@@ -38,11 +37,13 @@ phylogenetic inference and as the R add-on package {\tt pvclust}
 (Suzuki and Shimodaira 2006) for hierarchical clustering. The point of
 the {\tt scaleboot} package is to calculate an improved version of the
 AU $p$-value that is justified even for hypotheses with nonsmooth
-boundaries (Shimodaira 2006).
+boundaries (Shimodaira 2008).
 
 The basic usage of this package is illustrated in a simple example
 below.  Then real applications in hierarchical clustering and
 phylogenetic inference are shown later.
+
+For the use of {\tt scaleboot}, Shimodaira (2008) may be referenced.
 
 \section{Install}
 
@@ -149,24 +150,38 @@ nb <- 10000
 
 X.sb <- scaleboot(X,nb,sa,countw,mc1)
 @ 
-The result is shown by
+The main result (for $k=3$) is shown by
 <<ans1>>=
-summary(X.sb)
+summary(X.sb)  # k = 3 (default)
+@ 
+We can also see additional results by specifying $k$,
+<<ans1b>>=
+summary(X.sb, k=1:3)  # k = 1, 2, 3
 @ 
 
 A class of AU $p$-values $p_k$ indexed by $k=1,2,3$, are calculated,
 and they are labelled as {\tt k.1}, {\tt k.2}, and {\tt k.3}.  The
 $p$-values are shown in percent, and the standard errors are given in
-parentheses.  We should look at the row of {\tt sing.3} as indicated
-as the best model in terms of AIC, and we can ignore the other
-rows. $p_1\approx 1\%$ corresponds to the ordinary BP, and $p_2\approx
-18\%$ corresponds to the AU $p$-value of Shimodaira (2002).  What we
-recommend to use here is $p_3\approx41\%$; this is the AU $p$-value of
-Shimodaira (2006).  For this particular example, the common practice
-for calculating a $p$-value is to use the multiple comparisons
-method. If it is applied to $y$, the $p$-value is $p=66\%$, which is
-rather close to $p_3$ in our example, whereas $p_1$ is obviously too
-small.
+parentheses.  We should look at the row of {\tt average} (the bottom
+line), and we can ignore the other rows.  $p_1\approx 1\%$ corresponds
+to the ordinary BP, and $p_2\approx 18\%$ corresponds to the AU
+$p$-value of Shimodaira (2002).  What we recommend to use here is
+$p_3\approx40\%$; this is the AU $p$-value of Shimodaira (2008).  For
+this particular example, the common practice for calculating a
+$p$-value is to use the multiple comparisons method. If it is applied
+to $y$, the $p$-value is $p=66\%$, which is rather close to $p_3$ in
+our example, whereas $p_1$ is obviously too small.
+
+Internally, as explained in the next section, several models are
+fitted to the observed bootstrap probabilities. They are sorted in
+increasing order of AIC, and the best model is {\tt sing.3}. The row
+of {\tt sing.3} is duplicated in the row {\tt best}, two lines from
+the bottom. The Akaike weights $\propto \exp(-{\rm AIC}/2)$ are also
+computed for models and the $p$-values are averaged using the weights
+so that we get the row of {\tt average}, the bottom line. Typically,
+the two bottom lines are almost identical, and {\tt average} is
+regarded as a smoothed version of {\tt best} for small changes in
+data.  I recommend to use {\tt average} instead of {\tt best}.
 
 \subsection{Internal Steps}
 
@@ -277,7 +292,7 @@ Then the corrected $p$-values are calculated by $p_k=1-\Phi(q_k)$.  By
 default $\sigma_0^2=1$. The calculation of $q_k$ is interpreted as
 extrapolation of $\sigma z_{\sigma^2}$ to $\sigma^2=-1$ by using the
 first $k$ terms of the Taylor series. According to the theory of
-Shimodaira (2006), the unbiased $p$-value is, if it exists, obtained
+Shimodaira (2008), the unbiased $p$-value is, if it exists, obtained
 by taking the limit $k\to\infty$. The extrapolated curves are shown
 (Fig.~\ref{fig:diag1s}) by
 <<diag1s,echo=true,fig=false>>=
@@ -407,8 +422,8 @@ All the calculated $p$-values for node 67 are given by
 <<lungpval67>>=
 summary(lung73.sb[[67]])
 @ 
-The extrapolation using the best model is shown
-(Fig.~\ref{fig:lungext67}) by
+The extrapolation using the best models (averaged by the Akaike
+weights) is shown (Fig.~\ref{fig:lungext67}) by
 <<lungext67,echo=true,fig=false>>=
 plot(summary(lung73.sb[[67]]),legend="topleft")
 @ 
@@ -603,7 +618,7 @@ mam15.trees <- mam15.relltest[1:15]
 stat <- attr(mam15.trees,"stat")
 o <- order(stat)
 mam15.trees <- mam15.trees[o]
-summary(mam15.trees)
+summary(mam15.trees, k=1:3)
 @ 
 
 Next we look at the $p$-values. We confirm that $p_1$ (the second
@@ -656,13 +671,12 @@ Shimodaira, H.
 \newblock An approximately unbiased test of phylogenetic tree selection.
 \newblock {\em Syst. Biol.} {\bf 51} 492--508.
 
-\bibitem{bib:Shimo:2006:AUT}
-Shimodaira, H.
-(2006)
-\newblock Approximately Unbiased Tests for Singular
-Surfaces via Multiscale Bootstrap Resampling.
-\newblock Research Report {B}-430, Dept. Mathematical and Computing
-  Sciences, Tokyo Institute of Technology, Tokyo.
+\bibitem{bib:Shimo:2008:TRN}
+Shimodaira, H. (2008)
+\newblock Testing Regions with Nonsmooth Boundaries via Multiscale Bootstrap.
+\newblock \emph{Journal of Statistical Planning and Inference}
+{\bf 138} 1227-1241
+(\url{http://dx.doi.org/10.1016/j.jspi.2007.04.001}).
 
 \bibitem{bib:SH1999} 
 Shimodaira, H. and Hasegawa, M. (2001)

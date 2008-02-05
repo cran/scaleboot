@@ -12,16 +12,15 @@
 }
 \usage{
 
-sbpsi.poly(beta,s=1,k=1,sp=-1,aux=NULL,check=FALSE)
+sbpsi.poly(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
 
-sbpsi.sing(beta,s=1,k=1,sp=-1,aux=NULL,check=FALSE)
+sbpsi.sing(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
 
-sbpsi.sphe(beta,s=1,k=1,sp=-1,aux=NULL,check=FALSE)
+sbpsi.sphe(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
 
-sbpsi.generic(beta,s=1,k=1,sp=-1,aux=NULL,check=FALSE,zfun,eps=0.01)
+sbpsi.generic(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE,zfun,eps=0.01)
 
-sbmodelnames(m=3,poly=m,sing=m,sphe=0)
-
+sbmodelnames(m=1:3,one.sided=TRUE,two.sided=FALSE,rev.sided=FALSE,poly,sing,poa,pob,sia,sib,sphe)
 }
 \arguments{
   \item{beta}{numeric vector of parameters;
@@ -32,14 +31,22 @@ sbmodelnames(m=3,poly=m,sing=m,sphe=0)
   \item{s}{\eqn{\sigma_0^2}.}
   \item{k}{numeric to specify the order of derivatives.}
   \item{sp}{\eqn{\sigma_p^2}.}
+  \item{lambda}{a numeric of specifying the type of p-values; Bayesian (lambda=0) Frequentist (lambda=1).}
   \item{aux}{auxiliary parameter. Currently not used.}
   \item{check}{logical for boundary check.}
   \item{zfun}{z-value function with (s,beta) as parameters.}
   \item{eps}{delta for numerical computation of derivatives.}
-  \item{m}{numeric to specify the maximum number of parameters.}
+  \item{m}{numeric vector to specify the numbers of parameters.}
+  \item{one.sided}{logical to include poly and sing models.}
+  \item{two.sided}{logical to include poa and sia models.}
+  \item{rev.sided}{logical to include pob and sib models.}
   \item{poly}{maximum number of parameters in poly models.}
   \item{sing}{maximum number of parameters in sing models.}
   \item{sphe}{maximum number of parameters in sphe models.}
+  \item{poa}{maximum number of parameters in poa models.}
+  \item{pob}{maximum number of parameters in pob models.}
+  \item{sia}{maximum number of parameters in sia models.}
+  \item{sib}{maximum number of parameters in sib models.}
 }
 \details{
   For \eqn{k=1}, the \code{sbpsi} functions return their \eqn{\psi} function

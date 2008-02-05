@@ -1,6 +1,6 @@
 ##
 ##  scaleboot: R package for multiscale bootstrap
-##  Copyright (C) 2006 Hidetoshi Shimodaira
+##  Copyright (C) 2006-2007 Hidetoshi Shimodaira
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
@@ -28,8 +28,10 @@
 ##
 
 plot.scaleboot <- function(x,
-                       models=names(x$fi),
-                       k=NULL,s=NULL,sp=NULL,
+                       models=NULL,
+                       select=NULL,
+                       sort.by=c("aic","none"),
+                       k=NULL,s=NULL,sp=NULL,lambda=NULL,
                        ## parameters for x-y axises
                        xval=c("square","inverse","sigma"),
                        yval=c("psi","zvalue","pvalue"),
@@ -50,15 +52,51 @@ plot.scaleboot <- function(x,
                        ...
                        ) {
 
+  ## option
+  op <- sboptions()
+
   ## check log
   if(length(log.xy) && log.xy != "") a <- strsplit(log.xy,"")[[1]] else a <- ""
   xlog <- "x" %in% a
   ylog <- "y" %in% a
 
-  ## models
-  if(is.numeric(models)) models <- names(x$fi)[models]
-  if(length(models)==1 && models=="best") models <- x$best$model
+  ## calculate akaike weights
+  aic <- sapply(x$fi,"[[","aic")
 
+  ## specify models
+  if(is.null(models)) models <- names(x$fi)
+  else if(is.character(models)) {
+    a <- match(models,names(x$fi))
+    a <- a[!is.na(a)]
+    if(length(a)>0) models <- names(x$fi)[a] else models <- character(0)
+  }
+  sort.by <- match.arg(sort.by)
+  if(sort.by == "aic") {
+    if(is.numeric(models)) models <- names(x$fi)[order(aic)[models]]
+    else models <- models[order(aic[models])]
+  } else {
+    if(is.numeric(models)) models <- names(x$fi)[models]
+  }
+
+  
+  ## specify select for extrapolation
+  if(!is.null(k) && length(models)>0) {
+    a <- aic[models] - min(aic[models])
+    aicw <- exp(-a/2) # akaike weights
+    aicw <- aicw/sum(aicw)
+
+    select <- match.arg(select,c("best","average",models))
+    if(select=="best") models2 <- models[order(aic[models])[1]]
+    else if(select=="average") models2 <- models[aicw>op$th.aicw]
+    else models2 <- select
+    models <- models2
+    aicw <- aicw[models]/sum(aicw[models])
+  }
+  
+  ## check if models are valid
+  i <- match(models,names(x$fi))
+  models <- names(x$fi)[i[!is.na(i)]]
+  
   ## x-axis
   ## s : sigma^2
   ## xfun(s) : x-axis function
@@ -81,7 +119,7 @@ plot.scaleboot <- function(x,
 
   ## y-axis
   ## p : psi-value
-  ## yfun(p,s) : y-axis function
+  ## yfun(p,s) : conversion p -> y
   yval <- match.arg(yval)
   if(yval=="zvalue") {
     ylab0 <- expression(z(sigma^2))
@@ -95,29 +133,42 @@ plot.scaleboot <- function(x,
   } else stop("yval is ",yval)
   if(is.null(ylab)) ylab <- ylab0
 
-
   ## observed points
-  sa <- x$sa
-  bp <- x$bp
-  ss <- sqrt(sa)
-  bs <- -qnorm(bp)*ss # observed psi-value
+  sa <- x$sa # sigma squared
+  bp <- x$bp # bootstrap probabilities
+  ss <- sqrt(sa) # scales
+  bs <- -qnorm2(bp)*ss # observed psi-value
   by <- yfun(bs,sa) # observed y-axis
   bx <- xfun(sa) # observed x-axis
   u <- is.finite(if(ylog) log(by) else by)
   by.u <- by[u]; bx.u <- bx[u]
 
   ## extrapolation
-  if(!is.null(k) && !is.null(x$fi[[models]])) {
-    fi <- x$fi[[models]]  # should be one model
-    psi <- get(fi$psi)
-    psiex <- sapply(k,function(k0)
-                    psi(fi$mag*fi$par,s,k=k0,sp=sp))
-    py <- yfun(psiex,sp)
+  if(!is.null(k)) {
+    if(is.null(main)) main <- c(paste("extrapolation k=",
+                                      paste(k,collapse=","),sep=""),
+                                paste(models,collapse="+"))
+  } else {
+    if(is.null(main)) main <- c("model fitting",
+                                paste(models,collapse=","))
+  }
+  if(!is.null(k) && length(models)>0) {
+    zex <- matrix(0,length(k),length(models))
+    for(i in seq(along=models)) {
+      f <- x$fi[[models[i]]]
+      beta <- f$par*f$mag      
+      psi <- get(f$psi)      
+      for(j in seq(along=k)) 
+        zex[j,i] <- psi(beta,s=s,k=k[j],sp=sp,lambda=lambda)
+    }
+    if(length(models)>1) {
+      py <- yfun(wsumzval(zex,aicw),1)
+    } else {
+      py <- yfun(drop(zex),1)
+    }
     px <- rep(xfun(sp),length(py))
-    if(is.null(main)) main <- paste("extrapolation (",models,")",sep="")
   } else {
     px <- NULL; py <- NULL
-    if(is.null(main)) main <- "model fitting"
   }
 
   ## xlim and ylim
@@ -125,7 +176,8 @@ plot.scaleboot <- function(x,
     xlim <- if(length(bx.u)>0) range(bx.u,px) else range(bx,px)
   }
   if(is.null(ylim)) {
-    ylim <- if(length(bx.u)>0) range(by.u,py) else c(-1,1)
+    py.u <- py[is.finite(py)]
+    ylim <- if(length(bx.u)>0) range(by.u,py.u) else c(-1,1)
   }
 
   ## plot
@@ -140,7 +192,6 @@ plot.scaleboot <- function(x,
   if(!is.null(k))
     points(c(NA,px),c(NA,py),pch=ex.pch,cex=cex,col=col,lwd=pt.lwd,...)
 
-
   ## return value (passed to lines)
   z1 <- list(sa=sa,bp=bp,bx=bx,by=by,use=u,
              px=px,py=py,
@@ -149,7 +200,7 @@ plot.scaleboot <- function(x,
              length.x=length.x,col=col,lty=lty,lwd=lwd)
 
   ## lines
-  z2 <- lines(x,z1,models=models,k=k,s=s,sp=sp)
+  z2 <- lines(x,z1,models=models,k=k,s=s,sp=sp,lambda=lambda)
 
 
   ## legend
@@ -158,11 +209,11 @@ plot.scaleboot <- function(x,
   invisible(c(z1,z2))
 }
 
-plot.summary.scaleboot <- function(x,
-                                   models="best",
-                                   k=x$parex$k,s=x$parex$s,sp=x$parex$sp,
-                                   ...)
-  plot.scaleboot(x,models=models,k=k,s=s,sp=sp,...)
+plot.summary.scaleboot <-
+  function(x,select="average",
+           k=x$parex$k,s=x$parex$s,sp=x$parex$sp,lambda=x$parex$lambda,
+           ...)
+  plot.scaleboot(x,select=select,k=k,s=s,sp=sp,lambda=lambda,...)
 
 
 ##
@@ -171,11 +222,11 @@ plot.summary.scaleboot <- function(x,
 ##
 lines.scaleboot <- function(x,z,
                         models=names(x$fi),
-                        k=NULL,s=NULL,sp=NULL,
+                        k=NULL,s=NULL,sp=NULL,lambda=NULL,
                         length.x=z$length.x,
                         col=z$col,lty=z$lty,lwd=z$lwd,...
                         ) {
-  if(is.null(models)) return(invisible(NULL))
+  if(is.null(models)||length(models)==0) return(invisible(NULL))
   
   ## sequence in x-axis
   rx <- z$xlim
@@ -190,8 +241,7 @@ lines.scaleboot <- function(x,z,
   u1 <- sa >= 0  # for psi function
   u2 <- sa <= s  # for extraplolation
   
-
-  if(is.null(k)) {
+  if(is.null(k)) {### fitting models (without extrapolations)
     yy <- matrix(0,length(xx),length(models))
     yy[] <- NA
     for(i in seq(along=models)) {
@@ -205,20 +255,38 @@ lines.scaleboot <- function(x,z,
     }
     labels <- models
     
-  } else {
-    yy <- matrix(0,length(xx),length(k)+1)
-    yy[] <- NA
-    f <- x$fi[[models]] ## should be one model
-    if(!is.null(f)) {
+  } else { ### fitting models and extrapolation
+    ## first, prepare the containers
+    yy <- matrix(NA,length(xx),length(k)+1) # for matlines
+    yy1 <- matrix(NA,sum(u1),length(models)) # for psi
+    yy2 <- array(NA,dim=c(sum(u2),length(k),length(models))) # for ext
+    ## compute psi values for models
+    for(i in seq(along=models)) {
+      f <- x$fi[[models[i]]]
       beta <- f$par*f$mag
       psi <- get(f$psi)
-      yy[u1,1] <- sapply(sa[u1],function(s) psi(beta,s))
-      for(i in seq(along=k)) {
-        py <- sapply(sa[u2],function(s1) psi(beta,s=s,k=k[i],sp=s1))
-        yy[u2,i+1] <- z$yfun(py,sa)
+      yy1[,i] <- sapply(sa[u1],function(s0) psi(beta,s0))
+      for(j in seq(along=k)) {
+        yy2[,j,i] <- sapply(sa[u2],function(s1)
+                            psi(beta,s=s,k=k[j],sp=s1,lambda=lambda))
       }
     }
-    labels <- c(models,paste("k",k,sep="."))
+    if(length(models)>1) { ## then, average models...
+      aic <- sapply(x$fi[models],"[[","aic")
+      w <- exp(-(aic-min(aic))/2) # akaike weights
+      w <- w/sum(w)
+      ## averaged fitting model
+      y1 <- wsumzval(yy1/sqrt(sa[u1]),w)*sqrt(sa[u1])
+      yy[u1,1] <- z$yfun(y1,sa[u1])
+      ## averaged extrapolation
+      y2 <- wsumzval(yy2,w)
+      yy[u2,-1] <- z$yfun(y2,1)
+    } else { ## if only one model...
+      yy[u1,1] <- z$yfun(yy1,sa[u1]) # fitting
+      yy[u2,-1] <- z$yfun(yy2,1) # extrapolation
+    }
+#    browser()
+    labels <- paste("k",k,sep=".")
   }
 
   if(!all(is.na(yy))) matlines(xx,yy,col=col,lty=lty,lwd=lwd)
@@ -250,7 +318,7 @@ sblegend <- function(x="topright",y=NULL,z,inset=0.1,...) {
 ## scalebootv
 ##
 
-plot.scalebootv <- function(x,models=attr(x,"models"),...) {
+plot.scalebootv <- function(x,models=attr(x,"models"),sort.by="none",...) {
   ## preliminary
   n <- length(x)
   m <- n2mfrow(n)
@@ -262,11 +330,11 @@ plot.scalebootv <- function(x,models=attr(x,"models"),...) {
   # plots
   z <- NULL
   for(i in seq(length=n)) {
-    z[[i]] <- plot(x[[i]],main=names(x)[[i]],models=models,...)
+    z[[i]] <- plot(x[[i]],main=names(x)[[i]],models=models,sort.by=sort.by,...)
   }
   invisible(z)
 }
 
-plot.summary.scalebootv <- function(x, models="best",...)
-  plot.scalebootv(x,models=models,...)
+plot.summary.scalebootv <- function(x, select="average",...)
+  plot.scalebootv(x,select=select,...)
 

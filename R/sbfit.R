@@ -1,6 +1,6 @@
 ##
 ##  scaleboot: R package for multiscale bootstrap
-##  Copyright (C) 2006 Hidetoshi Shimodaira
+##  Copyright (C) 2006-2007 Hidetoshi Shimodaira
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
@@ -57,12 +57,12 @@ sbfit.default <- function(x,nb,sa,models=NULL,nofit=FALSE,...) {
   bp <- x
   op <- sboptions()
   if(is.null(models)) models <- op$models
-  if(length(models)==1 && is.numeric(models)) models <- sbmodelnames(m=models)
+  if(is.numeric(models)) models <- sbmodelnames(m=models)
   bp <- as.vector(bp)
   if(length(bp) != length(sa)) stop("length(bp) != length(sa)")
   nb <- rep(nb,length=length(bp))
   i1 <- order(abs(sa-1))[1] # used for raw bp
-  raw <- list(pv=bp[i1],pe=sebp(bp[i1],nb[i1]),nb=nb[i1])
+  raw <- list(pv=bp[i1],pe=sebp(bp[i1],nb[i1]),nb=nb[i1],s=sa[i1])
   x <- list(bp=bp,nb=nb,sa=sa,raw=raw)
   class(x) <- "scaleboot"
   if(nofit) return(x)
@@ -80,10 +80,13 @@ sbfit.default <- function(x,nb,sa,models=NULL,nofit=FALSE,...) {
                      z$size[[i]],x,y[seq(1,length=i-1)],z$aux[[i]]))
     ## model fitting
     psi <- paste("sbpsi",z$base[[i]],sep=".")  # psi-function name
+    if(op$debug) {
+      cat("#################### sbfit\n")
+      print(psi)
+    }
     ans <- sbfit1(bp,nb,sa,get(psi),
-                  ini$inits,ini$mag,
-                  method=op$method,
-                  control=op$control)
+                  ini$inits,ini$mag,ini$omg,ini$trg,
+                  method=op$method,control=op$control)
     if(!is.null(ans)) {
       ans$psi <- psi
       
@@ -115,7 +118,7 @@ sbfit.matrix <- function(x,nb,sa,models=NULL,names.hp=rownames(x),
                          nofit=FALSE,cluster=NULL,...) {
   ## preliminary
   if(is.null(models)) models <- sboptions("models")
-  if(length(models)==1 && is.numeric(models)) models <- sbmodelnames(m=models)
+  if(is.numeric(models)) models <- sbmodelnames(m=models)
   x <- as.matrix(x)
   nb <- rep(nb,length=ncol(x))
   if(ncol(x) != length(sa)) stop("length(bp) != length(sa")
@@ -243,7 +246,7 @@ printbps <- function(bps,nb,sa,digits=NULL) {
 
 
 ## print
-print.scaleboot <- function(x,...) {
+print.scaleboot <- function(x,sort.by=c("aic","none"),...) {
   printbps(x$bp,x$nb,x$sa)
   
   fi <- x$fi
@@ -253,17 +256,14 @@ print.scaleboot <- function(x,...) {
   }
 
   ## maximum likelihood estimates of parameters
-  cat("\nCoefficients:\n")
   a <- coef(x,sd=TRUE)
   betamat <- matrix("",nrow(a$estimate),ncol(a$estimate),
                     dimnames=dimnames(a$estimate))
   for(j in seq(length=ncol(a$estimate))) {
     betamat[,j] <- myformat(c(pi,a$estimate[,j]),c(pi,a$sd[,j]),digits=4)[-1]
   }
-  catmat(betamat)
 
   ## goodness of fit
-  cat("\nModel Fitting:\n")
   rss <- sapply(fi,"[[","rss")
   df <- sapply(fi,"[[","df")
   pfit <- sapply(fi,"[[","pfit")
@@ -274,7 +274,18 @@ print.scaleboot <- function(x,...) {
                 myformat(c(pi,aic),digits=2)[-1])
   dimnames(gmat) <- list(names(fi),
                          c("rss","df","pfit","aic"))
-  catmat(gmat)
+
+  ## sort
+  sort.by <- match.arg(sort.by)
+  j <- switch(sort.by,
+              none=1:length(aic),
+              aic=order(aic))
+
+  ## print tables
+  cat("\nCoefficients:\n")
+  catmat(betamat[j,,drop=F])
+  cat("\nModel Fitting:\n")
+  catmat(gmat[j,,drop=F])
 
   ## find the best model
   aic0 <- min(aic)

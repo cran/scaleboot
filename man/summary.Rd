@@ -9,10 +9,14 @@
 }
 \usage{
 
-\method{summary}{scaleboot}(object,models=names(object$fi),k=1:3,s=1,sp=-1,...)
+\method{summary}{scaleboot}(object,models=names(object$fi),k=3,s=1,sp=-1,
+              type=c("Frequentist","Bayesian"),...)
 
-\method{summary}{scalebootv}(object,models=attr(object,"models"),k=1:3,...)
+\method{summary}{scalebootv}(object,models=attr(object,"models"),k=3,type="Frequentist",...)
 
+\method{print}{summary.scaleboot}(x,sort.by=c("aic","none"),verbose=FALSE,...)
+
+\method{print}{summary.scalebootv}(x,select="average",sort.by=NULL,nochisq=TRUE,...)
 }
 \arguments{
   \item{object}{an object used to select a method. }
@@ -21,6 +25,17 @@
   \item{k}{numeric vector of \eqn{k} for calculating p-values.}
   \item{s}{\eqn{\sigma_0^2}}
   \item{sp}{\eqn{\sigma_p^2}}
+  \item{type}{If numeric, it is passed to \code{sbpsi} functions as
+    \code{lambda} to specify p-value type. If "Frequentist" or
+    "Bayesian", then equivalent to specifying \code{lambda} = 1 or 0,
+    respectively.}
+  \item{select}{character of model name (such as "poly.3") or one of
+    "average" and "best". If "average" or "best", then the averaging by
+    Akaike weights or the best model is used, respectively.}
+  \item{x}{object.}
+  \item{sort.by}{sort key.}
+  \item{verbose}{logical.}
+  \item{nochisq}{logical.}
   \item{...}{further arguments passed to and from other methods.}  
 }
 
@@ -69,12 +84,13 @@ fitting by using the \code{plot} method.
 data(mam15)
 ## For a single hypothesis
 a <- mam15.relltest[["t4"]] # an object of class "scaleboot"
-summary(a) # calculate and print p-values (k=1:3)
+summary(a) # calculate and print p-values (k=3)
+summary(a,k=2) # calculate and print p-values (k=2)
 summary(a,k=1:4) # up to "k.4" p-value.
 
 ## For multiple hypotheses
 b <- mam15.relltest[1:15] # an object of class "scalebootv"
-summary(b) # calculate and print p-values (k=1:3)
+summary(b) # calculate and print p-values (k=3)
 summary(b,k=1:4) # up to "k.4" p-value.
 
 }
