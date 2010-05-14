@@ -23,7 +23,7 @@ sbaic(x) <- value
   \item{x}{an object used to select a method. }
   \item{k}{numeric, the penalty per parameter to be used.}
   \item{value}{numeric vector of AIC values for models.}
-  \item{...}{}
+  \item{...}{further arguments passed to and from other methods.}
 }
 \details{
   \code{sbaic} can be used to modify the \code{aic} components for

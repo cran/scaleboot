@@ -54,8 +54,8 @@ sbfit(x, ...)
     function \code{makeCluster}.}
   \item{sort.by}{sort key.}
   \item{...}{further arguments passed to and from other methods.}  
-  }
 }
+
 \details{
   \code{sbfit.default} fits parametric models to \code{bp}
   by maximizing the log-likelihood value of a binomial model.
@@ -75,7 +75,7 @@ sbfit(x, ...)
   times the hypothesis of interest is observed in bootstrap replicates
   at scale \code{sa[i]}. Then we assume that \code{cnt[i]} is binomially
   distributed with number of trials \code{nb[i]} and success
-  probability \code{1-\pnorm(psi(beta,s=sa[i])/sqrt(sa[i]))}. Currently,
+  probability \code{1-pnorm(psi(beta,s=sa[i])/sqrt(sa[i]))}. Currently,
   \code{sbpsi.poly} and \code{sbpsi.sing} are available as \eqn{\psi}
   functions. The estimated model parameters are accessed by the
   \code{\link{coef.scaleboot}} method.

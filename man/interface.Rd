@@ -53,9 +53,9 @@ sbpvclust(x,mbs,k=3,select="average",...)
 \value{
   \code{read.mt} returns a matrix of dimension sequence-length by tree-number.
   If \code{identity=FALSE}, then \code{read.ass} returns a list containing components
-  \code{x} for edge->tree associations and \code{y} for tree$\to$edge associations.
-  If \code{identity=TRUE}, \code{read.ass} returns a list vector of edge$\to$tree
-  associations, where the identity associations for tree$\to$tree are included.
+  \code{x} for edge->tree associations and \code{y} for tree\eqn{\to}edge associations.
+  If \code{identity=TRUE}, \code{read.ass} returns a list vector of edge\eqn{\to}tree
+  associations, where the identity associations for tree\eqn{\to}tree are included.
   \code{read.cnt} returns a list containing components \code{bps},
   \code{nb}, and \code{sa} to be used for \code{sbfit}. The list also contains
   components \code{cnt}, \code{id}, and \code{val}.

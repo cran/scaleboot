@@ -12,8 +12,9 @@ multiscale bootstrap probabilities.
 For a complete
 list, use \code{library(help="scaleboot")}.
 
-The methodology is described in Shimodiara (2008). For the use of {\tt
-scaleboot}, Shimodaira (2008) may be referenced.
+The methodology is described in Shimodiara (2008). For the use of
+\code{scaleboot}, Shimodaira (2008) may be referenced.
+
 
 Further information is available in the following vignette:
 \tabular{ll}{
