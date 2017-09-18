@@ -67,7 +67,7 @@ sbconf.default <- function(x,sa,
   bps <- sapply(x,function(s) sapply(ts,function(t)
                                       sum(s<=t))/length(s))
   ## fitting
-  fits <- sbfit(bps,nb,sa,op$models,cluster=cluster)
+  fits <- sbfit(bps,nb,sa,models=op$models,cluster=cluster)
 
   ##
   z <- list(stat=x,nb=nb,sa=sa,ts=ts,ts0=ts0,fits=fits,
@@ -121,7 +121,8 @@ sbconf.sbconf <- function(x,
         ## add a new t-value
         t.new <- a$xv; x$ts <- c(x$ts,t.new)
         bp.new <- sapply(x$stat,function(s) sum(s<=t.new)/length(s))
-        f <- sbfit(bp.new,x$nb,x$sa,models); x$fits[[length(x$fits)+1]] <- f
+        f <- sbfit(bp.new,x$nb,x$sa,models=models)
+        x$fits[[length(x$fits)+1]] <- f
         b <- summary(f,k=k,s=s,sp=sp)
         pv.new <- b$pv[model,1]
         pe.new <- b$pe[model,1]

@@ -1,6 +1,6 @@
 ##
 ##  scaleboot: R package for multiscale bootstrap
-##  Copyright (C) 2006-2007 Hidetoshi Shimodaira
+##  Copyright (C) 2006-2008 Hidetoshi Shimodaira
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
@@ -20,94 +20,6 @@
 ###
 ### INTERNAL FUNCTIONS
 ###
-
-######################################################################
-### INTERNAL: MODEL FITTING
-
-
-### model fitting 1
-## bp : vector of bootstrap probabilities
-## nb : vector of number of replicates
-## sa : vector of sigma^2's
-## psi : function(beta,s)
-## inits : matrix of initial beta's
-## mag : vector of magnification factor for beta
-## omg: weights for penality of regularization term
-## trg: target values of parameters of regularlization term
-
-sbfit1 <- function(bp,nb,sa,psi,inits,mag=1,omg=NULL,trg=NULL,
-                   method=NULL,control=NULL) {
-  ss <- sqrt(sa)
-  lik <- function(par) # (-1)* log likelihood function
-    likbinom(pnorm(-sapply(sa,function(s) psi(mag*par,s))/ss),bp,nb)
-  if(!is.null(omg)) {
-    if(is.null(trg)) trg <- 0
-    obj <- function(par) lik(par)+sum(omg*(mag*par-trg)^2)
-  } else obj <- lik
-  chkcoef <- function(par) {
-    y <- psi(mag*par,check=TRUE)
-    if(!is.null(y)) y$par <- y$beta/mag
-    y
-  }
-  fit <- optims(inits,obj,method=method,control=control,chkcoef=chkcoef)
-  fit$inits <- inits
-  fit$mag <- mag
-  fit$omg <- omg
-  fit$trg <- trg
-  fit
-}
-
-### wls fitting 1
-## mat : function(beta,sa,mag=1) for design matrix of z-value
-## init : initial beta, but only length and name are used
-
-sbwlsfit1 <- function(bp,nb,sa,mat,init,mag=1,tol=1e-10) {
-  bz <- -qnorm(bp)
-  uu <- !is.infinite(bz) # use only these elements for wls
-  if(sum(uu)<1) return(NULL) # no data
-  bz <- bz[uu]; bp <- bp[uu]; nb <- nb[uu]; sa <- sa[uu]
-  X <- mat(init,sa,mag)
-  if(sum(uu)<ncol(X)) return(NULL)  # too few data
-  vv <- (1-bp)*bp/(dnorm(bz)^2*nb) # var(bz)
-  fit <- lsfit(X,bz,1/vv,intercept=F) # WLS(weighted least squares)
-  list(par=fit$coef)
-}
-
-## likbinom : minus log-likelihood of binomial distribution
-##
-## Arguments:
-##  pr : a vector of probability parameters
-##  bp : a vector of observed probabilities
-##  nb : a vector of sample sizes
-##
-## Value:
-##  likbinom returns the minums of the log-likelihood value.
-likbinom <- function(pr,bp,nb) {
-  bp2 <- 1-bp; pr2 <- 1-pr;
-  -sum(nb*(bp*logx(pr)+bp2*logx(pr2)))
-}
-
-
-######################################################################
-### INTERNAL: P-VALUE
-
-
-### corrected p-value 1
-## fit : output of optims (includes var, mag)
-## psi : function(beta,s,k)
-## k : degree for corrected p-value (default: k=1)
-## s : sigma^2 for corrected p-value (default: s=1)
-## sp : sigma^2 for prediction (default: sp=-1)
-## lambda : mixing bayes (lambda=0) and freq (lambda=1)
-
-sbpv1 <- function(fit,psi,k=1,s=1,sp=-1,lambda=0) {
-  pval <- function(par) pnorm(-psi(fit$mag*par,s,k=k,sp=sp,lambda=lambda))
-  pv <- pval(fit$par)
-  h <- nderiv(pval,fit$par)
-  pe <- sqrtx(h %*% fit$var %*% h)
-  list(pv=pv,pe=pe)
-}
-
 
 ######################################################################
 ### INTERNAL: CONFIDENCE INTERVAL
@@ -272,7 +184,7 @@ optims <- function(coefs,fn,chkcoef=NULL,eps=1e-3,...) {
 
 ## solvex: a stable inverse of symmetric matrix
 solvex <- function(x,tol=1e-16) {
-  e <- eigen(x,sym=T) # eigen values and vectors
+  e <- eigen(x,symmetric=T) # eigen values and vectors
   val <- e$val # eigen values
   ##  u <- abs(val) < tol # almost zero values
   u <- val < tol
@@ -313,6 +225,52 @@ qnorm2 <- function(x) {
   x[x>1] <- 1
   x[x<0] <- 0
   qnorm(x)
+}
+
+## sbbpxtab : convert (bp,bpm) to a table of bp's
+##
+## bpx = (bp,bpm)
+## bp = Pr( obs = (1,?) )
+## bpm = c( Pr(obs=(?,1)), Pr(obs=(1,1)) )
+##
+## x[1,1] = Pr( obs=(0,0) )
+## x[1,2] = Pr( obs=(0,1) )
+## x[2,1] = Pr( obs=(1,0) )
+## x[2,2] = Pr( obs=(1,1) )
+##
+sbbpxtab <- function(bpx) {
+  x <- matrix(0,2,2)
+  x[2,2] <- bpx[3]
+  x[1,2] <- bpx[2] - bpx[3]
+  x[2,1] <- bpx[1] - bpx[3]
+  x[1,1] <- 1 - (bpx[1]+bpx[2]-bpx[3])
+  x
+}
+
+
+## prnorm2 : probability
+##
+## zi ~ N(0,1), i=1,2; correlation=r
+## calculate P(z1 < a1 & z2 < a2)
+prnorm2 <- function(a1,a2,r,tol=1e-6) 
+  pmvnorm(mean=c(0,0),sigma=matrix(c(1,r,r,1),2,2),
+          lower=rep(-Inf,2),upper=c(a1,a2),maxpts=1e7,abseps=tol)
+
+## denorm2 : density
+denorm2 <- function(a1,a2,r) {
+  b <- 1/(1-r^2)
+  exp( -0.5*b*((a1-a2)^2 + 2*(1-r)*a1*a2) )*sqrt(b)*0.5/pi
+}
+
+
+## prnorm4
+##
+## zi ~ N(0,1), i=1,2; correlation=r
+## calculate P(b1 < z1 < a1 & b2 < z2 < a2)
+prnorm4 <- function(a1,a2,b1,b2,r,tol=1e-6) {
+  if(b1>=a1 || b2>=a2) return(0)
+  pmvnorm(mean=c(0,0),sigma=matrix(c(1,r,r,1),2,2),
+          lower=c(b1,b2),upper=c(a1,a2),maxpts=1e7,abseps=tol)
 }
 
 ## weighted average of z-values

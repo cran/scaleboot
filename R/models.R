@@ -1,6 +1,6 @@
 ##
 ##  scaleboot: R package for multiscale bootstrap
-##  Copyright (C) 2006-2007 Hidetoshi Shimodaira
+##  Copyright (C) 2006-2008 Hidetoshi Shimodaira
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
@@ -18,6 +18,119 @@
 ##
 ######################################################################
 ### INTERNAL: MODEL DESCRIPTIONS
+
+
+##
+## lambda :
+##   if a numeric is specified, mixing between bayes (lambda=0) and freq (lambda=1)
+##   if unspecified (default), calculate psi for fitting bp
+##
+
+
+
+#### get function
+sbpsiget <- function(model) get(paste("sbpsi",model,sep="."))
+sbprbget <- function(model) get(paste("sbprb",model,sep="."))
+
+
+
+########################################
+##
+## models with infinite depth
+##
+
+##
+## onesided: basic onesided models
+##
+
+sbprb.onesided <- function(psifunc,beta,s,sm,check) {
+  if(check) return(psifunc(beta,check=check))
+  a1 <- -psifunc(beta,s)/sqrt(s)
+  p1 <- pnorm(a1)
+  if(is.null(sm)) return(p1)
+
+  s2 <- s+sm
+  a2 <- -psifunc(beta,s2)/sqrt(s2)
+  p2 <- pnorm(a2)
+  p12 <- prnorm2(a1,a2,sqrt(s)/sqrt(s2))
+  c(p1,p2,p12)
+}
+
+
+##
+## modified onesided
+##
+
+sbpsi.monesided <- function(psifunc,beta,s,k,sp,lambda,check) {
+  m <- length(beta)
+  betam <- beta[m]
+  beta <- beta[-m]
+  if(check) {
+    a <- psifunc(beta,check=check)
+    if(!is.null(a)) 
+      a <- list(beta=c(a$beta,betam),mask=c(a$mask,TRUE))
+    return(a)
+  }
+
+  psifunc(beta,s,k,sp,lambda)
+}
+
+sbprb.monesided <- function(psifunc,beta,s,sm,check,mfunc) {
+  m <- length(beta)
+  betam <- beta[m]
+  beta <- beta[-m]
+  if(check) {
+    a <- psifunc(beta,check=check)
+    if(!is.null(a)) 
+      a <- list(beta=c(a$beta,betam),mask=c(a$mask,TRUE))
+    return(a)
+  }
+
+  op <- sboptions()
+
+  a1 <- -psifunc(beta,s)/sqrt(s)
+  p1 <- pnorm(a1)
+  if(is.null(sm)) return(p1)
+
+  s2 <- s+sm
+  a2 <- -psifunc(beta,s2)/sqrt(s2)
+  p2 <- pnorm(a2)
+
+  if(op$cor.pom) {
+    s3 <- mfunc(s,sm,beta,betam)
+#    rho <- sqrt(s/s2)-0.5*betam*s3
+    rho <- sqrt(s/s2)-0.5*s3
+    if(rho< -0.9999) rho <- -0.9999
+    if(rho>  0.9999) rho <-  0.9999
+    p12 <- prnorm2(a1,a2,rho)
+  } else {
+    rho <- sqrt(s/s2)
+    s3 <- mfunc(s,sm,beta,betam)
+    p12 <- prnorm2(a1,a2,rho) -0.5*denorm2(a1,a2,rho)*s3
+  }
+  
+  c(p1,p2,p12)
+}
+
+mfunc.sim <- function(s,sm,beta,betam) {
+  ## only valid for sing.3
+  beta1 <- beta[2]
+  beta2 <- beta[3]
+  ## expand around sigma=1
+  c1 <- beta1*beta2*(3-2*beta2)
+  c2 <- beta1*(beta2-1)^2
+  ##
+  s2 <- s+sm
+  rho <- sqrt(s/s2)
+  betam*(c1*c1*rho*(1-rho)+ 2*c2*c2*rho*sm+ 2*c1*c2*sqrt(s)*(1-rho*rho))
+}
+mfunc.pom <- function(s,sm,beta,betam) {
+  beta1 <- beta[2]
+  c2 <- beta1
+  s2 <- s+sm
+  rho <- sqrt(s/s2)  
+  betam*2*c2*c2*rho*sm
+}
 
 
 ### psi function for polynomial model
@@ -44,7 +157,16 @@
 ## s0 = {1,s,s^2,...,s^(k0-1)}  # length=k0
 
 sbpsi.poly <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE) {
-  if(check) return(NULL)
+  if(check) {
+    b <- beta
+    op <- sboptions()
+    low <- sbmagini(length(b),op$low1.poly)
+    upp <- sbmagini(length(b),op$upp1.poly)
+    a1 <- b<=low+0.01; b[a1] <- low[a1]
+    a2 <- b>=upp-0.01; b[a2] <- upp[a2]
+    y <- !(a1|a2) # valid parameter range
+    if(all(y)) return(NULL) else return(list(beta=b,mask=y))    
+  }
   k0 <-length(beta) 
   y <- s0 <- s^(0:(k0-1)) 
   a <- b <- 1
@@ -55,6 +177,26 @@ sbpsi.poly <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE) {
   }
   sum(y*beta)
 }
+
+### probabiliy function for polynomial model
+##
+## beta : parameters
+## s : scale (sigma^2)
+## sm : scales for multistep (only 2-step is implemented)
+##
+sbprb.poly <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.onesided(sbpsi.poly,beta,s,sm,check) 
+
+
+### pom: modified poly models
+sbprb.pom <- function(beta,s=1,sm=NULL,check=FALSE) {
+  sbprb.monesided(sbpsi.poly,beta,s,sm,check,mfunc.pom)
+}
+
+sbpsi.pom <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE) {
+  sbpsi.monesided(sbpsi.poly,beta,s,k,sp,lambda,check)
+}
+
 
 ### design matrix for polynomial model
 ##
@@ -121,22 +263,26 @@ sbmat.poly <- function(par,sa,mag=1) {
 ##
 
 sbpsi.sing <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE) {
-  if(check) {
-    len <- length(beta)
-    x <- beta[len]
-    if(x<= 0.01) x<-0
-    else if(x>=0.99) x<-1
-    else return(NULL)
-    ## if there is a change...
-    beta[len] <- x
-    y <- rep(T,len); y[len] <- F
-    return(list(beta=beta,mask=y))
-  }
   k0 <- length(beta)-1 # number of polynomial coefficients
   if(k0<2) stop("length(beta) must >= 3")
-  x <- beta[[k0+1]]   # singularity parameter
-  if(x<0) x<-0 else if(x>1) x<-1
-  a <- x/(1-x)
+  b <- beta[1:k0]
+  u <- beta[k0+1]
+  if(check) {
+    op <- sboptions()
+    low <- sbmagini(length(b),op$low1.poly)
+    upp <- sbmagini(length(b),op$upp1.poly)
+    a1 <- b<=low+0.01; b[a1] <- low[a1]
+    a2 <- b>=upp-0.01; b[a2] <- upp[a2]
+    a5 <- u <= 0.01; u[a5] <- 0
+    a6 <- u >= 0.99; u[a6] <- 1
+    
+    beta[1:k0] <- b[1:k0]
+    beta[k0+1] <- u
+    y <- !c((a1|a2),(a5|a6)) # valid parameter range
+    if(all(y)) return(NULL) else return(list(beta=beta,mask=y))
+  }
+  if(u<0) u<-0 else if(u>1) u<-1
+  a <- u/(1-u)
   if(is.finite(a)) {
     ## |a| < oo
     ## calculate factors for beta's
@@ -163,6 +309,38 @@ sbpsi.sing <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE) {
   ## output
   as.numeric(sum(wi*beta[-c(1,k0+1)])+beta[1])
 }
+
+sbprb.sing <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.onesided(sbpsi.sing,beta,s,sm,check) 
+
+
+## ### sim0: modified sing model with betak=1 fixed
+## sbprb.sim0 <- function(beta,s=1,sm=NULL,check=FALSE) {
+##   m <- length(beta)
+##   beta <- c(beta[-m],1,beta[m])  # singular parm=1 (fixed)
+##   a <- sbprb.monesided(sbpsi.sing,beta,s,sm,check,mfunc.sim)
+##   if(check && !is.null(a)) {
+##     a <- list(beta=a$beta[-m],mask=a$mask[-m])
+##   }
+##   return(a)
+## }
+
+## sbpsi.sim0 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE) {
+##   m <- length(beta)
+##   beta <- c(beta[-m],1,beta[m])  # singular parm=1 (fixed)
+##   sbpsi.monesided(sbpsi.sing,beta,s,k,sp,lambda,check)
+## }
+
+
+### sim: modified sing model with betak variable
+sbprb.sim <- function(beta,s=1,sm=NULL,check=FALSE) {
+  sbprb.monesided(sbpsi.sing,beta,s,sm,check,mfunc.sim)
+}
+
+sbpsi.sim <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE) {
+  sbpsi.monesided(sbpsi.sing,beta,s,k,sp,lambda,check)
+}
+
 
 ##
 ## sbsingd(x,i,j) calculates
@@ -390,6 +568,8 @@ sbpsi.sphe <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE) {
   y
 }
 
+sbprb.sphe <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.onesided(sbpsi.sphe,beta,s,sm,check) 
 
 ## internal function
 ## calculate z-value for spherical model
@@ -437,77 +617,17 @@ sbpsi.generic <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE,zf
   y
 }
 
-### psi generic function for polynomial-difference model
+########################################
 ##
-## beta : beta={b[0],b[1],...,b[k0-1],d[0],...,d[k1-1]}
-## b : polynomial coefficients 
-## d : difference parameter d={d[0],...,d[k1-1]}
-## s : s = sigma^2 (default: s=1)
-## k : use derivatives up to k-1 for prediction
-## sp : prediction for s=sp (default: sp=-1)
-## lambda :
-##   if specified, mixing between bayes (lambda=0) and freq (lambda=1)
-##   if unspecified (default), calculate psi for fitting bp
-## aux : ignored
-## check : check if beta is at boundary
-## k1 : number of difference parameters
-## typea : TRUE if type-a, FALSE if tybe-b
-##
-## output (type-a):
-##  When lambda=NULL,
-##    psi = -sigma*qnorm(pnorm(-psi1/sigma) - pnorm(-psi2/sigma))
-##  Otherwise,
-##    psi = -qnorm(p), where
-##  For type-b, -psi is returned.
-##
-##  p = p-value
-##  sigma = square roof of s
-##  psi1 = poly.(k0) with {b[0],...,b[k0-1]} (type-a)
-##  psi1 = poly.(k0) with {-b[0],...,-b[k0-1]} (type-b)
-##  psi2 = psi1 + poly.(k1) with {d[0],...,d[k1-1]}
+## models with finite depth
 ##
 
-sbpsipoa <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE,k1,typea) {
-  k0 <- length(beta)-k1 # number of polynomial coefficients
-  if(k0<k1) stop("too few parameters") # can be replaced by k0<1
-  b <- beta[1:k0] # beta parm
-  if(k0==1) b <- c(b,0)
-  d <- beta[(k0+1):(k0+k1)] # dif parm
-  if(k1==1) d <- c(d,0)
-  else if(k1!=2) stop("k1 out of range")
+sbpsi.twosided <- function(func,k1,typea,typec,beta,s,k,sp,lambda,check) {
+  if(check) return(func(k1,typea,typec,beta,s,k,sp,check=check))
 
-  if(check) {
-    op <- sboptions()
-    ## check beta0
-    if(!typea) b <- -b
-    v1 <- sum(b[1:2])
-    v2 <- v1 + sum(d[1:2])
-    if(abs(v1)>abs(v2)) {
-      b[1:2] <- b[1:2] + d
-      b <- -b
-      a0 <- TRUE
-    } else a0 <- FALSE
-
-    ## check the limits
-    low <-  op$low1.poa
-    upp <-  op$upp1.poa
-    a1 <- b<=-9.99; b[a1] <- -10
-    a2 <- b>= 9.99; b[a2] <- 10
-    a3 <- d<=low+0.01; d[a3] <- low[a3]
-    a4 <- d>=upp-0.01; d[a4] <- upp[a4]
-    
-    ## save
-    if(!typea) b <- -b    
-    beta[1:k0] <- b[1:k0]
-    beta[(k0+1):(k0+k1)] <- d[1:k1]
-    y <- !c((a1|a2)[1:k0],(a3|a4)[1:k1]) # valid parameter range
-    if(all(y)&&!a0) return(NULL) else return(list(beta=beta,mask=y))
-  }
-  if(typea) beta1 <- b else beta1 <- -b
-  beta2 <- beta1; beta2[1:2] <- beta2[1:2]+ d
-  psi1 <- sbpsi.poly(beta1,s,k,sp)
-  psi2 <- sbpsi.poly(beta2,s,k,sp)
-
+  x <- func(k1,typea,typec,beta,s,k,sp)
+  psi1 <- x[1]; psi2 <- x[2]
+  
   if(is.null(lambda)) {
     sigma <- sqrt(s)
     psi <- sigma*wzval(psi1/sigma,psi2/sigma,-1)
@@ -517,53 +637,146 @@ sbpsipoa <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE,k1,type
   if(typea) psi else -psi
 }
 
+sbprb.twosided <- function(func,k1,typea,typec,beta,s,sm,check) {
+  if(check) return(func(k1,typea,typec,beta,s,check=check))
+  x1 <- -func(k1,typea,typec,beta,s)/sqrt(s)
+  p1 <- pnorm(x1[1]) - pnorm(x1[2])
+  if(is.null(sm)) return(if(typea) p1 else 1-p1)
+
+  s2 <- s+sm
+  x2 <- -func(k1,typea,typec,beta,s2)/sqrt(s2)
+  p2 <- pnorm(x2[1]) - pnorm(x2[2])
+#  if(x1[1]<=x1[2] || x2[1]<=x2[2]) browser()
+  p12 <- prnorm4(x1[1],x2[1],x1[2],x2[2],sqrt(s)/sqrt(s2))
+
+  if(typea) c(p1,p2,p12) else c(1-p1,1-p2,1+p12-p1-p2)
+}
+
+
+### psi generic function for polynomial-difference model
+## (convex or concave)
+##
+## returns only (psi1,psi2)
+##
+## k1=1 or 2 : number of difference parameters
+## typea : TRUE for type-a/c, FALSE for type-b/d
+## typec : TRUE for type-c/d, FALSE for type-a/b
+## beta = c(beta1,diff)
+##   beta1 is for psi1
+##   diff is the difference for psi2
+##
+sbpsipoa <- function(k1,typea,typec,beta,s=1,k=1,sp=-1,check=FALSE) {
+  ## prepare beta1 and beta2
+  k0 <- length(beta)-k1 # number of polynomial coefficients
+  if(k0<k1) stop("too few parameters") # can be replaced by k0<1
+  b <- beta[1:k0] # beta parm
+  if(k0==1) b <- c(b,0)
+  d <- beta[(k0+1):(k0+k1)] # dif parm
+  if(k1==1) d <- c(d,0)
+  else if(k1!=2) stop("k1 out of range")
+  if(typea) beta1 <- b else beta1 <- -b
+  if(typec) beta2 <- c(beta1[1]+d[1],-beta1[2]-d[2],-beta1[c(-1,-2)])
+  else beta2 <- c(beta1[1]+d[1],beta1[2]+d[2],beta1[c(-1,-2)])
+
+  ## checking the parameter range
+  if(check) {
+    op <- sboptions()
+    ## check beta0
+    v1 <- sum(beta1[1:2])
+    v2 <- sum(beta2[1:2])
+    if(abs(v1)>abs(v2)) {
+      ## swap psi1 and psi2
+      b <- -beta2
+      a0 <- TRUE
+    } else {
+      b <- beta1
+      a0 <- FALSE
+    }
+    ## check the limits
+    low <- sbmagini(length(b),op$low1.poly)
+    upp <- sbmagini(length(b),op$upp1.poly)
+    a1 <- b<=low+0.01; b[a1] <- low[a1]
+    a2 <- b>=upp-0.01; b[a2] <- upp[a2]
+
+    low <-  op$low1.poa
+    upp <-  op$upp1.poa
+    a3 <- d<=low+0.01; d[a3] <- low[a3]
+    a4 <- d>=upp-0.01; d[a4] <- upp[a4]
+    
+    ## save
+    if(!typea) b <- -b 
+    beta[1:k0] <- b[1:k0]
+    beta[(k0+1):(k0+k1)] <- d[1:k1]
+    y <- !c((a1|a2)[1:k0],(a3|a4)[1:k1]) # valid parameter range
+    if(all(y)&&!a0) return(NULL) else return(list(beta=beta,mask=y))
+  }
+
+  ## compute psi functions
+  psi1 <- sbpsi.poly(beta1,s,k,sp)
+  psi2 <- sbpsi.poly(beta2,s,k,sp)
+  c(psi1,psi2)
+}
+
 ### psi functions for polynomial-difference models
 
 sbpsi.poa1 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
-  sbpsipoa(beta,s,k,sp,lambda,aux,check,k1=1,typea=TRUE)
+  sbpsi.twosided(sbpsipoa,k1=1,typea=TRUE,typec=FALSE,beta,s,k,sp,lambda,check)
 
 sbpsi.poa2 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
-  sbpsipoa(beta,s,k,sp,lambda,aux,check,k1=2,typea=TRUE)
+  sbpsi.twosided(sbpsipoa,k1=2,typea=TRUE,typec=FALSE,beta,s,k,sp,lambda,check)
 
 sbpsi.pob1 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
-  sbpsipoa(beta,s,k,sp,lambda,aux,check,k1=1,typea=FALSE)
+  sbpsi.twosided(sbpsipoa,k1=1,typea=FALSE,typec=FALSE,beta,s,k,sp,lambda,check)
 
 sbpsi.pob2 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
-  sbpsipoa(beta,s,k,sp,lambda,aux,check,k1=2,typea=FALSE)
+  sbpsi.twosided(sbpsipoa,k1=2,typea=FALSE,typec=FALSE,beta,s,k,sp,lambda,check)
+
+sbpsi.poc1 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
+  sbpsi.twosided(sbpsipoa,k1=1,typea=TRUE,typec=TRUE,beta,s,k,sp,lambda,check)
+
+sbpsi.poc2 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
+  sbpsi.twosided(sbpsipoa,k1=2,typea=TRUE,typec=TRUE,beta,s,k,sp,lambda,check)
+
+sbpsi.pod1 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
+  sbpsi.twosided(sbpsipoa,k1=1,typea=FALSE,typec=TRUE,beta,s,k,sp,lambda,check)
+
+sbpsi.pod2 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
+  sbpsi.twosided(sbpsipoa,k1=2,typea=FALSE,typec=TRUE,beta,s,k,sp,lambda,check)
+
+### probability functions for polynomial-difference models
+
+sbprb.poa1 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsipoa,k1=1,typea=TRUE,typec=FALSE,beta,s,sm,check)
+
+sbprb.poa2 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsipoa,k1=2,typea=TRUE,typec=FALSE,beta,s,sm,check)
+
+sbprb.pob1 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsipoa,k1=1,typea=FALSE,typec=FALSE,beta,s,sm,check)
+
+sbprb.pob2 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsipoa,k1=2,typea=FALSE,typec=FALSE,beta,s,sm,check)
+
+sbprb.poc1 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsipoa,k1=1,typea=TRUE,typec=TRUE,beta,s,sm,check)
+
+sbprb.poc2 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsipoa,k1=2,typea=TRUE,typec=TRUE,beta,s,sm,check)
+
+sbprb.pod1 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsipoa,k1=1,typea=FALSE,typec=TRUE,beta,s,sm,check)
+
+sbprb.pod2 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsipoa,k1=2,typea=FALSE,typec=TRUE,beta,s,sm,check)
+
 
 
 ### psi generic function for singular-difference model
-##
+## (convex or concave)
 ## beta : beta={b[0],b[1],...,b[k0-1],u,d[0],...,d[k1-1]}
-## b : polynomial coefficients
-## u : singular parameter
-## d : difference parameter d={d[0],...,d[k1-1]}
-## s : s = sigma^2 (default: s=1)
-## k : use derivatives up to k-1 for prediction
-## sp : prediction for s=sp (default: sp=-1)
-## lambda :
-##   if specified, mixing between bayes (lambda=0) and freq (lambda=1)
-##   if unspecified (default), calculate psi for fitting bp
-## aux : ignored
-## check : check if beta is at boundary
-## k1 : number of difference parameters
-## typea : TRUE if type-a, FALSE if tybe-b
 ##
-## output (type-a):
-##  When lambda=NULL,
-##    psi = -sigma*qnorm(pnorm(-psi1/sigma) - pnorm(-psi2/sigma))
-##  Otherwise,
-##    psi = -qnorm(p), where
-##  For type-b, -psi is returned.
-##
-##  p = p-value
-##  sigma = square roof of s
-##  psi1 = sing.(k0+1) with {b[0],...,b[k0-1],u} (type-a)
-##  psi1 = sing.(k0+1) with {-b[0],...,-b[k0-1],u} (type-b)
-##  psi2 = sing.(k0+1) with the coefficients increased by {d[0],...,d[k1-1]}
-##
-
-sbpsisia <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE,k1,typea) {
+sbpsisia <- function(k1,typea,typec,beta,s=1,k=1,sp=-1,check=FALSE) {
+  ## prepare beta1 and beta2
   k0 <- length(beta)-k1-1 # number of polynomial coefficients
   if(k0<2) stop("too few parameters")
   b <- beta[1:k0]
@@ -571,26 +784,35 @@ sbpsisia <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE,k1,type
   d <- beta[(k0+2):(k0+1+k1)] # dif parm
   if(k1==1) d <- c(d,0)
   else if(k1!=2) stop("k1 out of range")
-
+  if(typea) beta1 <- b else beta1 <- -b
+  if(typec) beta2 <- c(beta1[1]+d[1],-beta1[2]-d[2],-beta1[c(-1,-2)])
+  else beta2 <- c(beta1[1]+d[1],beta1[2]+d[2],beta1[c(-1,-2)])
+  
+  ## checking the parameter range
   if(check) {
     op <- sboptions()
     ## check beta0
-    if(!typea) b <- -b
-    v1 <- sum(b[1:2])
-    v2 <- v1 + sum(d[1:2])
+    v1 <- sum(beta1[1:2])
+    v2 <- sum(beta2[1:2])
     if(abs(v1)>abs(v2)) {
-      b[1:2] <- b[1:2] + d
-      b <- -b
+      ## swap psi1 and psi2
+      b <- -beta2
       a0 <- TRUE
-    } else a0 <- FALSE
-
+    } else {
+      b <- beta1
+      a0 <- FALSE
+    }
     ## check the limits
+    low <- sbmagini(length(b),op$low1.poly)
+    upp <- sbmagini(length(b),op$upp1.poly)
+    a1 <- b<=low+0.01; b[a1] <- low[a1]
+    a2 <- b>=upp-0.01; b[a2] <- upp[a2]
+
     low <-  op$low1.poa
     upp <-  op$upp1.poa
-    a1 <- b<=-9.99; b[a1] <- -10
-    a2 <- b>= 9.99; b[a2] <- 10
     a3 <- d<=low+0.01; d[a3] <- low[a3]
     a4 <- d>=upp-0.01; d[a4] <- upp[a4]
+    
     a5 <- u <= 0.01; u[a5] <- 0
     a6 <- u >= 0.99; u[a6] <- 1
 
@@ -602,33 +824,66 @@ sbpsisia <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE,k1,type
     y <- !c((a1|a2)[1:k0],(a5|a6),(a3|a4)[1:k1]) # valid parameter range
     if(all(y)&&!a0) return(NULL) else return(list(beta=beta,mask=y))
   }
-  if(typea) beta1 <- b else beta1 <- -b
-  beta2 <- beta1; beta2[1:2] <- beta2[1:2]+ d
+
+  ## compute psi functions
   psi1 <- sbpsi.sing(c(beta1,u),s,k,sp)
   psi2 <- sbpsi.sing(c(beta2,u),s,k,sp)
-
-  if(is.null(lambda)) {
-    sigma <- sqrt(s)
-    psi <- sigma*wzval(psi1/sigma,psi2/sigma,-1)
-  } else {
-    psi <- wzval(psi1,psi2,2*lambda-1)
-  }
-  if(typea) psi else -psi
+  c(psi1,psi2)
 }
 
 ### psi functions for singular-difference models
 
 sbpsi.sia1 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
-  sbpsisia(beta,s,k,sp,lambda,aux,check,k1=1,typea=TRUE)
+  sbpsi.twosided(sbpsisia,k1=1,typea=TRUE,typec=FALSE,beta,s,k,sp,lambda,check)
 
 sbpsi.sia2 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
-  sbpsisia(beta,s,k,sp,lambda,aux,check,k1=2,typea=TRUE)
+  sbpsi.twosided(sbpsisia,k1=2,typea=TRUE,typec=FALSE,beta,s,k,sp,lambda,check)
 
 sbpsi.sib1 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
-  sbpsisia(beta,s,k,sp,lambda,aux,check,k1=1,typea=FALSE)
+  sbpsi.twosided(sbpsisia,k1=1,typea=FALSE,typec=FALSE,beta,s,k,sp,lambda,check)
 
 sbpsi.sib2 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
-  sbpsisia(beta,s,k,sp,lambda,aux,check,k1=2,typea=FALSE)
+  sbpsi.twosided(sbpsisia,k1=2,typea=FALSE,typec=FALSE,beta,s,k,sp,lambda,check)
+
+sbpsi.sic1 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
+  sbpsi.twosided(sbpsisia,k1=1,typea=TRUE,typec=TRUE,beta,s,k,sp,lambda,check)
+
+sbpsi.sic2 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
+  sbpsi.twosided(sbpsisia,k1=2,typea=TRUE,typec=TRUE,beta,s,k,sp,lambda,check)
+
+sbpsi.sid1 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
+  sbpsi.twosided(sbpsisia,k1=1,typea=FALSE,typec=TRUE,beta,s,k,sp,lambda,check)
+
+sbpsi.sid2 <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
+  sbpsi.twosided(sbpsisia,k1=2,typea=FALSE,typec=TRUE,beta,s,k,sp,lambda,check)
+
+
+### probability functions for singular-difference models
+
+sbprb.sia1 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsisia,k1=1,typea=TRUE,typec=FALSE,beta,s,sm,check)
+
+sbprb.sia2 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsisia,k1=2,typea=TRUE,typec=FALSE,beta,s,sm,check)
+
+sbprb.sib1 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsisia,k1=1,typea=FALSE,typec=FALSE,beta,s,sm,check)
+
+sbprb.sib2 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsisia,k1=2,typea=FALSE,typec=FALSE,beta,s,sm,check)
+
+sbprb.sic1 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsisia,k1=1,typea=TRUE,typec=TRUE,beta,s,sm,check)
+
+sbprb.sic2 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsisia,k1=2,typea=TRUE,typec=TRUE,beta,s,sm,check)
+
+sbprb.sid1 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsisia,k1=1,typea=FALSE,typec=TRUE,beta,s,sm,check)
+
+sbprb.sid2 <- function(beta,s=1,sm=NULL,check=FALSE)
+  sbprb.twosided(sbpsisia,k1=2,typea=FALSE,typec=TRUE,beta,s,sm,check)
+
 
 ######################################################################
 ### INTERNAL: MODEL INITIAL VALUES
@@ -672,6 +927,21 @@ sbmagini <- function(size,mag) {
   else c(mag,rep(mag[len],size-len))
 }
 
+### wls fitting 1
+## mat : function(beta,sa,mag=1) for design matrix of z-value
+## init : initial beta, but only length and name are used
+sbwlsfit1 <- function(bp,nb,sa,mat,init,mag=1,tol=1e-10) {
+  bz <- -qnorm(bp)
+  uu <- !is.infinite(bz) # use only these elements for wls
+  if(sum(uu)<1) return(NULL) # no data
+  bz <- bz[uu]; bp <- bp[uu]; nb <- nb[uu]; sa <- sa[uu]
+  X <- mat(init,sa,mag)
+  if(sum(uu)<ncol(X)) return(NULL)  # too few data
+  vv <- (1-bp)*bp/(dnorm(bz)^2*nb) # var(bz)
+  fit <- lsfit(X,bz,1/vv,intercept=F) # WLS(weighted least squares)
+  list(par=fit$coef)
+}
+
 ### initial value for polynomial model
 ##
 ## size : parameter size
@@ -696,6 +966,16 @@ sbini.poly <- function(size,x,y,aux=NULL) {
   inits <- cbind(inits,sbprevini(size,y,
       function(z,size) z$base == "poly" & z$size < size)/mag)
   list(inits=inits,mag=mag,omg=omg,trg=trg)
+}
+
+sbini.pom <- function(size,x,y,aux=NULL) {
+  a <- sbini.poly(size-1,x,y,aux)
+  a$inits <- rbind(a$inits,0)
+  op <- sboptions()
+  a$mag <- c(a$mag, op$mag1.pom)
+  a$omg <- c(a$omg, op$omg1.pom)
+  a$trg <- c(a$trg, 0)
+  a
 }
 
 ### initial values for singular model
@@ -735,6 +1015,84 @@ sbini.sing <- function(size,x,y,aux=NULL) {
 }
 
 
+### initial values for modified singular model
+##
+## size : parameter size
+## x : sbfit parameters
+## y : sbfit fits
+sbini.sim <- function(size,x,y,aux=NULL) {
+  par <- rep(0,size)
+  names(par) <- paste("beta",0:(size-1),sep="")
+  inits <- as.matrix(par)
+  k0 <- size-2
+
+  ## set mag
+  op <- sboptions()
+  mag <- c(sbmagini(k0,op$mag.poly),op$mag1.sing,op$mag1.sim)
+  trg <- c(sbmagini(k0,0),0,0)
+  omg <- c(sbmagini(k0,op$omg.poly),op$omg1.sing,op$omg1.sim)
+  
+  ## wls fitting
+  fit0 <- sbwlsfit1(x$bp,x$nb,x$sa,sbmat.poly,rep(0,k0),mag[1:k0])
+  if(!is.null(fit0)) inits <- cbind(inits,c(fit0$par,0,0))
+
+  ## utilize the previous poly
+  inits <- cbind(inits,sbprevini(size,y,
+     function(z,size) z$base == "poly" & z$size <= k0)/mag)
+
+  ## utilize the previous sing
+  par1 <- sbprevini(size,y,
+    function(z,size) z$base == "sing" & z$size <= size-1,
+    function(par1,size) {
+      size1 <- length(par1)
+      c(par1[1:(size1-1)],rep(0,size-size1-1),par1[size1],0)
+    })
+  inits <- cbind(inits,par1/mag)
+  
+  ## utilize the previous pom
+  par1 <- sbprevini(size,y,
+    function(z,size) z$base == "pom" & z$size <= size-1, 
+    function(par1,size) {
+      size1 <- length(par1)
+      c(par1[1:(size1-1)],rep(0,size-size1-1),0,par1[size1])
+    })
+  inits <- cbind(inits,par1/mag)
+
+  ## utilize the previous sim
+  par1 <- sbprevini(size,y,
+    function(z,size) z$base == "sim" & z$size < size, 
+    function(par1,size) {
+      size1 <- length(par1)
+      c(par1[1:(size1-2)],rep(0,size-size1),par1[c(size1-1,size1)])
+    })
+  inits <- cbind(inits,par1/mag)
+
+  list(inits=inits,mag=mag,omg=omg,trg=trg)
+}
+
+
+
+### modified singular models
+## sbini.sim0 <- function(size,x,y,aux=NULL) {
+##   a <- sbini.sing(size,x,y,aux)
+##   a$inits[size,] <- 0  
+##   op <- sboptions()
+##   a$mag[size] <- op$mag1.sim
+##   a$omg[size] <- op$omg1.sim
+##   a$trg[size] <- 0
+##   a
+## }
+
+## sbini.sim <- function(size,x,y,aux=NULL) {
+##   a <- sbini.sing(size-1,x,y,aux)
+##   a$inits <- rbind(a$inits,0)
+##   op <- sboptions()
+##   a$mag <- c(a$mag, op$mag1.sim)
+##   a$omg <- c(a$omg, op$omg1.sim)
+##   a$trg <- c(a$trg, 0)
+##   a
+## }
+
 ### initial value for spherical model
 ##
 ## size : parameter size
@@ -769,7 +1127,7 @@ sbini.sphe <- function(size,x,y,aux=NULL) {
 ## size : parameter size
 ## x : sbfit parameters
 ## y : sbfit fits
-sbinipoa <- function(size,x,y,aux=NULL,k1,typea) {
+sbinipoa <- function(size,x,y,aux=NULL,k1,typea,typec) {
   k0 <- size-k1
   if(k0<1) stop("k should be larger")
   if(k1>2 || k1<0) stop("k1 out of range")
@@ -810,7 +1168,11 @@ sbinipoa <- function(size,x,y,aux=NULL,k1,typea) {
   inits <- cbind(inits,par1/mag)
 
   ## utilize the previous poa or pob
-  if(typea) na1 <- "poa" else na1 <- "pob"
+  if(typec) {
+    if(typea) na1 <- "poc" else na1 <- "pod"
+  } else {
+    if(typea) na1 <- "poa" else na1 <- "pob"
+  }
   na2 <- paste(na1,k1,sep="") # to find  po[ab]{k1}.k-1
   par1 <- sbprevini(size,y,
     function(z,size) z$base == na2 & z$size-k1 <= k0,
@@ -832,17 +1194,22 @@ sbinipoa <- function(size,x,y,aux=NULL,k1,typea) {
   list(inits=inits,mag=mag,omg=omg,trg=trg)
 }
 
-sbini.poa1 <- function(size,x,y,aux=NULL) sbinipoa(size,x,y,aux,k1=1,typea=TRUE)
-sbini.poa2 <- function(size,x,y,aux=NULL) sbinipoa(size,x,y,aux,k1=2,typea=TRUE)
-sbini.pob1 <- function(size,x,y,aux=NULL) sbinipoa(size,x,y,aux,k1=1,typea=FALSE)
-sbini.pob2 <- function(size,x,y,aux=NULL) sbinipoa(size,x,y,aux,k1=2,typea=FALSE)
+sbini.poa1 <- function(size,x,y,aux=NULL) sbinipoa(size,x,y,aux,k1=1,typea=TRUE,typec=FALSE)
+sbini.poa2 <- function(size,x,y,aux=NULL) sbinipoa(size,x,y,aux,k1=2,typea=TRUE,typec=FALSE)
+sbini.pob1 <- function(size,x,y,aux=NULL) sbinipoa(size,x,y,aux,k1=1,typea=FALSE,typec=FALSE)
+sbini.pob2 <- function(size,x,y,aux=NULL) sbinipoa(size,x,y,aux,k1=2,typea=FALSE,typec=FALSE)
+
+sbini.poc1 <- function(size,x,y,aux=NULL) sbinipoa(size,x,y,aux,k1=1,typea=TRUE,typec=TRUE)
+sbini.poc2 <- function(size,x,y,aux=NULL) sbinipoa(size,x,y,aux,k1=2,typea=TRUE,typec=TRUE)
+sbini.pod1 <- function(size,x,y,aux=NULL) sbinipoa(size,x,y,aux,k1=1,typea=FALSE,typec=TRUE)
+sbini.pod2 <- function(size,x,y,aux=NULL) sbinipoa(size,x,y,aux,k1=2,typea=FALSE,typec=TRUE)
 
 ### initial value for singular-difference models
 ##
 ## size : parameter size
 ## x : sbfit parameters
 ## y : sbfit fits
-sbinisia <- function(size,x,y,aux=NULL,k1,typea) {
+sbinisia <- function(size,x,y,aux=NULL,k1,typea,typec) {
   k0 <- size-k1-1
   if(k0<2) stop("k should be larger")
   if(k1>2 || k1<0) stop("k1 out of range")
@@ -883,7 +1250,12 @@ sbinisia <- function(size,x,y,aux=NULL,k1,typea) {
   inits <- cbind(inits,par1/mag)
 
   ## utilize the previous sia or pib
-  if(typea) na1 <- "sia" else na1 <- "sib"
+  ## utilize the previous poa or pob
+  if(typec) {
+    if(typea) na1 <- "sic" else na1 <- "sid"
+  } else {
+    if(typea) na1 <- "sia" else na1 <- "sib"
+  }
   na2 <- paste(na1,k1,sep="") # to find  si[ab]{k1}.k-1
   par1 <- sbprevini(size,y,
     function(z,size) z$base == na2 & z$size-k1-1 <= k0,
@@ -905,10 +1277,15 @@ sbinisia <- function(size,x,y,aux=NULL,k1,typea) {
   list(inits=inits,mag=mag,omg=omg,trg=trg)
 }
 
-sbini.sia1 <- function(size,x,y,aux=NULL) sbinisia(size,x,y,aux,k1=1,typea=TRUE)
-sbini.sia2 <- function(size,x,y,aux=NULL) sbinisia(size,x,y,aux,k1=2,typea=TRUE)
-sbini.sib1 <- function(size,x,y,aux=NULL) sbinisia(size,x,y,aux,k1=1,typea=FALSE)
-sbini.sib2 <- function(size,x,y,aux=NULL) sbinisia(size,x,y,aux,k1=2,typea=FALSE)
+sbini.sia1 <- function(size,x,y,aux=NULL) sbinisia(size,x,y,aux,k1=1,typea=TRUE,typec=FALSE)
+sbini.sia2 <- function(size,x,y,aux=NULL) sbinisia(size,x,y,aux,k1=2,typea=TRUE,typec=FALSE)
+sbini.sib1 <- function(size,x,y,aux=NULL) sbinisia(size,x,y,aux,k1=1,typea=FALSE,typec=FALSE)
+sbini.sib2 <- function(size,x,y,aux=NULL) sbinisia(size,x,y,aux,k1=2,typea=FALSE,typec=FALSE)
+
+sbini.sic1 <- function(size,x,y,aux=NULL) sbinisia(size,x,y,aux,k1=1,typea=TRUE,typec=TRUE)
+sbini.sic2 <- function(size,x,y,aux=NULL) sbinisia(size,x,y,aux,k1=2,typea=TRUE,typec=TRUE)
+sbini.sid1 <- function(size,x,y,aux=NULL) sbinisia(size,x,y,aux,k1=1,typea=FALSE,typec=TRUE)
+sbini.sid2 <- function(size,x,y,aux=NULL) sbinisia(size,x,y,aux,k1=2,typea=FALSE,typec=TRUE)
 
 ######################################################################
 ### EOF

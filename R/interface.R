@@ -61,7 +61,7 @@ sbpvclust <- function(x,mbs,k=3,select="average",...) {
 ## double x[ntree,1], x[ntree,2],...,x[ntree,nsite];
 ##
 read.mt <- function(file,tlab="t") {
-  a <- scan(file,comment="#",quiet=T)
+  a <- scan(file,comment.char="#",quiet=T)
   ntree <- a[1]
   nsite <- a[2]
   if(length(a) != (2+ntree*nsite))
@@ -99,7 +99,7 @@ read.mt <- function(file,tlab="t") {
 ## int ne[ntree],y[ntree][1],...,y[ntree][ne[ntree]];
 ##
 read.ass <- function(file,identity=TRUE,tlab="t",elab="e") {
-  a <- scan(file,comment="#",quiet=T)
+  a <- scan(file,comment.char="#",quiet=T)
   k <- 1
   nedge <- a[k]; k <- k+1
   x <- vector("list",nedge)
@@ -160,7 +160,7 @@ read.ass <- function(file,identity=TRUE,tlab="t",elab="e") {
 ## int cnt[ntree,1],cnt[ntree,2],...,cnt[ntree,nscale];
 ##
 read.cnt <- function(file) {
-  a <- scan(file,comment="#",quiet=T)
+  a <- scan(file,comment.char="#",quiet=T)
   k <- 1
   ntree <- a[k]; k <- k+1
   id <- 1+a[seq(k,length=ntree)]; k <- k+ntree

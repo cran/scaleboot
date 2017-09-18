@@ -1,6 +1,6 @@
 ##
 ##  scaleboot: R package for multiscale bootstrap
-##  Copyright (C) 2006-2007 Hidetoshi Shimodaira
+##  Copyright (C) 2006-2008 Hidetoshi Shimodaira
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ summary.scaleboot <- function(object,models=names(object$fi),
   for(i in seq(along=models)) {
     m <- models[[i]]
     f <- object$fi[[m]]
-    psi <- get(f$psi)
+    psi <- sbpsiget(f$model)
     for(j in seq(along=k)) {
       y <- sbpv1(f,psi,k=k[[j]],s=s,sp=sp,lambda=lambda)
       pv[i,j] <- y$pv
@@ -98,7 +98,7 @@ summary.scaleboot <- function(object,models=names(object$fi),
 
   ## chisq p-value
   if(!is.null(f <- object$fi$sphe.3)) {
-    y <- sbpv1(f,get(f$psi),k=0,s=s,sp=sp)
+    y <- sbpv1(f,sbpsiget(f$model),k=0,s=s,sp=sp)
     object$chisq <- y
   }
 
@@ -123,6 +123,22 @@ summary.scaleboot <- function(object,models=names(object$fi),
   object$average <- list(w=w,pv=pvave,pe=peave,dv=dvave,de=deave)
 
   object
+}
+
+### corrected p-value 1
+## fit : output of optims (includes var, mag)
+## psi : function(beta,s,k)
+## k : degree for corrected p-value (default: k=1)
+## s : sigma^2 for corrected p-value (default: s=1)
+## sp : sigma^2 for prediction (default: sp=-1)
+## lambda : mixing bayes (lambda=0) and freq (lambda=1)
+
+sbpv1 <- function(fit,psi,k=1,s=1,sp=-1,lambda=0) {
+  pval <- function(par) pnorm(-psi(fit$mag*par,s,k=k,sp=sp,lambda=lambda))
+  pv <- pval(fit$par)
+  h <- nderiv(pval,fit$par)
+  pe <- sqrtx(h %*% fit$var %*% h)
+  list(pv=pv,pe=pe)
 }
 
 ## print

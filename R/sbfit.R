@@ -1,6 +1,6 @@
 ##
 ##  scaleboot: R package for multiscale bootstrap
-##  Copyright (C) 2006-2007 Hidetoshi Shimodaira
+##  Copyright (C) 2006-2008 Hidetoshi Shimodaira
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
@@ -29,7 +29,9 @@
             models = attr(x,"models"),
             bps = attr(x,"bps")[i,,drop=F],
             nb = attr(x,"nb"),
-            sa = attr(x,"sa")
+            sa = attr(x,"sa"),
+            bpms = attr(x,"bpms")[i,,,drop=F],
+            sam = attr(x,"sam")
             )
 
 ## general
@@ -37,12 +39,13 @@ sbfit <- function(x,...) UseMethod("sbfit")
 
 ## refitting
 sbfit.scaleboot <- function(x,models=names(x$fi),...) {
-  sbfit.default(x$bp,x$nb,x$sa,models,...)
+  sbfit.default(x$bp,x$nb,x$sa,models=models,bpm=x$bpm,sam=x$sam,...)
 }
 
 ## refitting
 sbfit.scalebootv <- function(x,models=attr(x,"models"),...) {
-  sbfit.matrix(attr(x,"bps"),attr(x,"nb"),attr(x,"sa"),models,...)
+  sbfit.matrix(attr(x,"bps"),attr(x,"nb"),attr(x,"sa"),models=models,
+               bpms=attr(x,"bpms"),sam=attr(x,"sam"),...)
 }
 
 
@@ -53,7 +56,13 @@ sbfit.scalebootv <- function(x,models=attr(x,"models"),...) {
 ## sa : vector of sigma^2's
 ## models : model names
 ##
-sbfit.default <- function(x,nb,sa,models=NULL,nofit=FALSE,...) {
+## We consider 2-step method:
+## bpm : array of multistep bp
+## sam : vector of multistep bp
+## (This is easily generalized for multi-step method)
+##
+sbfit.default <- function(x,nb,sa,models=NULL,nofit=FALSE,
+                          bpm=NULL,sam=NULL,...) {
   bp <- x
   op <- sboptions()
   if(is.null(models)) models <- op$models
@@ -72,28 +81,42 @@ sbfit.default <- function(x,nb,sa,models=NULL,nofit=FALSE,...) {
   y <- vector("list",length(models))
   names(y) <- models
   z <- sbname(models)
-  lik0 <- likbinom(bp,bp,nb) # lik of the unconstraint model
+
+
+  if(is.null(bpm)) {
+    lik0 <- likbinom(bp,bp,nb) # lik of the unconstraint model
+    bpt <- bp
+    sax <- sa
+  } else {
+    bpt <- apply(rbind(bp,bpm),2,sbbpxtab)
+    sax <- rbind(sa,sam)
+    lik0 <- likmulnom(bpt,bpt,nb)
+    x$bpm <- bpm
+    x$sam <- sam
+  }
+
   for(i in seq(along=models)) {
 
     ## prepare initial values
     ini <- eval(call(paste("sbini",z$base[[i]],sep="."),
                      z$size[[i]],x,y[seq(1,length=i-1)],z$aux[[i]]))
     ## model fitting
-    psi <- paste("sbpsi",z$base[[i]],sep=".")  # psi-function name
+    model <- z$base[[i]]
     if(op$debug) {
       cat("#################### sbfit\n")
-      print(psi)
+      print(model)
     }
-    ans <- sbfit1(bp,nb,sa,get(psi),
+    ans <- sbfit1(bpt,nb,sax,sbprbget(model),
                   ini$inits,ini$mag,ini$omg,ini$trg,
                   method=op$method,control=op$control)
     if(!is.null(ans)) {
-      ans$psi <- psi
+#      ans$psi <- psi
+      ans$model <- model
       
       ## diagnostics of model fitting
-      ans$df <- length(bp)-length(ans$par) # degrees of freedom
+      ans$df <- length(bp)+length(bpm)-length(ans$par) # degrees of freedom
       ans$rss <- 2*(ans$value-lik0) # likelihood ratio test statistic
-      if(ans$df>0) ans$pfit <- pchisq(ans$rss,lower=F,df=ans$df) # p-value
+      if(ans$df>0) ans$pfit <- pchisq(ans$rss,lower.tail=F,df=ans$df) # p-value
       else ans$pfit <- 1.0
       ans$aic <- ans$rss - 2*ans$df # aic
 
@@ -105,6 +128,76 @@ sbfit.default <- function(x,nb,sa,models=NULL,nofit=FALSE,...) {
   x
 }
 
+
+### model fitting 2 (for 2-step)
+## bpt : vector or matrix of bootstrap probabilities
+##   bpt = sbbpxtab applied to rbind(bp,bpm) for 2step
+## nb : vector of number of replicates
+## sax : vector or matrix of sigma^2's
+##   sax = rbind(sa,sam) for 2step
+## prb : function(beta,s,sm)
+## inits : matrix of initial beta's
+## mag : vector of magnification factor for beta
+## omg: weights for penality of regularization term
+## trg: target values of parameters of regularlization term
+
+sbfit1 <- function(bpt,nb,sax,prb,inits,mag=1,omg=NULL,trg=NULL,
+                   method=NULL,control=NULL) {
+  if(is.vector(bpt)) {
+    lik <- function(par) # (-1)* log likelihood function
+      likbinom(sapply(sax,function(s) prb(mag*par,s)),bpt,nb)
+  } else {
+    lik <- function(par) # (-1)* log likelihood function
+      likmulnom(apply(sax,2,function(sx) sbbpxtab(prb(mag*par,sx[1],sx[-1]))),
+                bpt,nb)
+  }
+  if(!is.null(omg)) {
+    if(is.null(trg)) trg <- 0
+    obj <- function(par) lik(par)+sum(omg*(mag*par-trg)^2)
+  } else obj <- lik
+  chkcoef <- function(par) {
+    y <- prb(mag*par,check=TRUE)
+    if(!is.null(y)) y$par <- y$beta/mag
+    y
+  }
+  fit <- optims(inits,obj,method=method,control=control,chkcoef=chkcoef)
+  fit$inits <- inits
+  fit$mag <- mag
+  fit$omg <- omg
+  fit$trg <- trg
+  fit
+}
+
+
+## likbinom : minus log-likelihood of binomial distribution
+##
+## Arguments:
+##  pr : a vector of probability parameters
+##  bp : a vector of observed probabilities
+##  nb : a vector of sample sizes
+##
+## Value:
+##  likbinom returns the minums of the log-likelihood value.
+likbinom <- function(pr,bp,nb) {
+  bp2 <- 1-bp; pr2 <- 1-pr;
+  -sum(nb*(bp*logx(pr)+bp2*logx(pr2)))
+}
+
+
+## likmulnom : minus log-likelihood of multinomial distribution
+##
+## Arguments:
+##  prt : matrix of probability parameters (each col is pr's)
+##  bpt : matrix of observed probabilities (each col is bp's)
+##  nb : a vector of sample sizes
+##
+## Value:
+##  likmulnom returns the minums of the log-likelihood value.
+likmulnom <- function(prt,bpt,nb) {
+  -sum(nb*t(bpt*logx(prt)))
+}
+
+
 ## matrix
 ##
 ## bps: matrix of bp's (each row is a bp vector)
@@ -115,7 +208,7 @@ sbfit.default <- function(x,nb,sa,models=NULL,nofit=FALSE,...) {
 sbfit.data.frame <- function(x,...) sbfit(as.matrix(x),...)
 
 sbfit.matrix <- function(x,nb,sa,models=NULL,names.hp=rownames(x),
-                         nofit=FALSE,cluster=NULL,...) {
+                         bpms=NULL,sam=NULL,nofit=FALSE,cluster=NULL,...) {
   ## preliminary
   if(is.null(models)) models <- sboptions("models")
   if(is.numeric(models)) models <- sbmodelnames(m=models)
@@ -131,9 +224,10 @@ sbfit.matrix <- function(x,nb,sa,models=NULL,names.hp=rownames(x),
   } else {
     ## apply sbfit to each bp vector
     arg <- structure(vector("list",nrep),names=names.hp)
-    for(i in seq(length=nrep)) arg[[i]] <- x[i,]
-    if(is.null(cluster)) ans <- lapply(arg,sbfit,nb,sa,models)
-    else ans <- parLapply(cluster,arg,sbfit,nb,sa,models)
+    for(i in seq(length=nrep)) arg[[i]] <- list(bp=x[i,],bpm=bpms[i,,])
+    calc1 <- function(x) sbfit(x$bp,nb,sa,models=models,bpm=x$bpm,sam=sam)
+    ans <- if(is.null(cluster)) lapply(arg,calc1)
+    else parLapply(cluster,arg,calc1)
     names(ans) <- names.hp
     attr(ans,"models") <- models
   }
@@ -143,6 +237,8 @@ sbfit.matrix <- function(x,nb,sa,models=NULL,names.hp=rownames(x),
   attr(ans,"bps") <- x
   attr(ans,"nb") <- nb
   attr(ans,"sa") <- sa
+  attr(ans,"bpms") <- bpms
+  attr(ans,"sam") <- sam
   
   ans
 }
@@ -217,7 +313,7 @@ coef.scalebootv <- function(object,...) {
 }
 
 ## print bp, nb, sa
-printbps <- function(bps,nb,sa,digits=NULL) {
+printbps <- function(bps,nb,sa,bpms=NULL,sam=NULL,digits=NULL) {
   mycatmat <- function(x) catmat(x,cn=seq(ncol(x)),sep=" ")
 
   if(!is.null(bps)) {
@@ -233,6 +329,28 @@ printbps <- function(bps,nb,sa,digits=NULL) {
     mycatmat(out)
   }
 
+  if(!is.null(bpms)) {
+    percent <- catpval(0)$name
+    cat("\n2-Step Bootstrap Probabilities (",percent,"):\n",sep="")    
+    di <- dim(bpms)
+    if(length(di)==3) {
+      out <- matrix("",di[1]*di[2],di[3])
+      na <- dimnames(bpms)[1]
+      if(is.null(na)) na <- 1:di[1]
+      na2 <- rep("",di[1]*di[2])
+      na2[1+(0:(di[1]-1))*di[2]] <- na
+      rownames(out) <- na2
+      for(i1 in 1:di[1]) 
+        for(i2 in 1:di[2]) for(i3 in 1:di[3]) 
+        out[(i1-1)*di[2]+i2,i3] <- catpval(bpms[i1,i2,i3],digits=digits)$value
+      mycatmat(out)
+    } else {
+      out <- capply(bpms,function(x) catpval(x,digits=digits)$value)
+      rownames(out) <- NULL
+      mycatmat(out)
+    }
+  }
+  
   if(!is.null(nb)) {
     cat("\nNumbers of Bootstrap Replicates:\n")
     mycatmat(matrix(sapply(nb,format),1))
@@ -242,12 +360,18 @@ printbps <- function(bps,nb,sa,digits=NULL) {
     cat("\nScales (Sigma Squared):\n")
     mycatmat(matrix(sapply(sa,format,digits=4),1))
   }
+
+  if(!is.null(sam)) {
+    cat("\n2-Step Scales (Sigma Squared):\n")
+    mycatmat(matrix(sapply(sam,format,digits=4),1))
+  }
+  
 }
 
 
 ## print
 print.scaleboot <- function(x,sort.by=c("aic","none"),...) {
-  printbps(x$bp,x$nb,x$sa)
+  printbps(x$bp,x$nb,x$sa,bpms=x$bpm,sam=x$sam)
   
   fi <- x$fi
   if(is.null(fi)) {
@@ -303,8 +427,8 @@ print.scalebootv <- function(x,...) {
   nb <- attr(x,"nb")
   sa <- attr(x,"sa")
 
-  printbps(bps,nb,sa,digits=0)
-
+  printbps(bps,nb,sa,bpms=attr(x,"bpms"),sam=attr(x,"sam"),digits=0)
+  
   ## aic table
   models <- attr(x,"models")
   if(length(x)>0) {

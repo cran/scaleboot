@@ -12,7 +12,7 @@
 \usage{
 
 \method{plot}{scaleboot}(x, models=NULL, select=NULL, sort.by=c("aic","none"),
-     k=NULL, s=NULL, sp=NULL, lambda=NULL,
+     k=NULL, s=NULL, sp=NULL, lambda=NULL, bpk=NULL,
      xval = c("square", "inverse","sigma"),
      yval = c("psi", "zvalue", "pvalue"), xlab = NULL,
      ylab = NULL,log.xy = "", xlim = NULL, ylim = NULL,
@@ -31,7 +31,7 @@
 
 
 \method{lines}{scaleboot}(x,z,models=names(x$fi), k=NULL,s=NULL,sp=NULL,lambda=NULL,
-      length.x=z$length.x, col=z$col,lty=z$lty,lwd=z$lwd,... )
+      bpk=NULL, length.x=z$length.x, col=z$col,lty=z$lty,lwd=z$lwd,... )
 
 sblegend(x="topright",y=NULL,z,inset=0.1,...)
 
@@ -49,6 +49,7 @@ sblegend(x="topright",y=NULL,z,inset=0.1,...)
   \item{s}{s for extrapolation.}
   \item{sp}{sp for extrapolation.}
   \item{lambda}{a numeric of specifying the type of p-values; Bayesian (lambda=0) Frequentist (lambda=1).}
+  \item{bpk}{(experimental for 2-step bootstrap)}
   \item{xval}{specifies x-axis.
     "square" for \eqn{\sigma^2},
     "inverse" for \eqn{1/\sigma},

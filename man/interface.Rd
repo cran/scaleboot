@@ -69,15 +69,15 @@ sbpvclust(x,mbs,k=3,select="average",...)
 Shimodaira, H. and Hasegawa, M. (2001). CONSEL: for
 assessing the confidence of phylogenetic tree selection,
 \emph{Bioinformatics}, 17, 1246-1247 (software is available from
-\url{http://www.is.titech.ac.jp/~shimo/prog/consel/}).
+\url{http://stat.sys.i.kyoto-u.ac.jp/prog/consel/}).
 
 Suzuki, R. and Shimodaira, H. (2006).
 pvclust: An R package for hierarchical clustering with p-values,
 \emph{Bioinformatics}, 22, 1540-1542 (software is available from CRAN or
-\url{http://www.is.titech.ac.jp/~shimo/prog/pvclust/}).
+\url{http://stat.sys.i.kyoto-u.ac.jp/prog/pvclust/}).
 }
 \author{Hidetoshi Shimodaira}
-\seealso{\code{\link{relltest}}}
+\seealso{\code{\link{lung73}}, \code{\link{mam15}}, \code{\link{relltest}}}
 \examples{
 
 \dontrun{
@@ -89,13 +89,15 @@ mam15.ass <- read.mt("mam15.ass")
 mam15.cnt <- read.mt("mam15.cnt")
 }
 
-\dontrun{
+## replace au/bp entries in pvclust object
 ## see help(lung73) for details
+library(pvclust)
 data(lung73)
-lung73.sb <- sbfit(lung73.pvclust,cluster=cl) # model fitting
+plot(lung73.pvclust) # draw dendrogram of pvlcust object
+pvrect(lung73.pvclust)
 lung73.new <- sbpvclust(lung73.pvclust,lung73.sb) # au <- k.3
-}
-
+plot(lung73.new) # redraw dendrogram with the new au/bp values
+pvrect(lung73.new)
 }
 \keyword{ file }
 

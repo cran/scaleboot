@@ -24,7 +24,7 @@ Further information is available in the following vignette:
 \author{
 Hidetoshi Shimodaira
 
-Maintainer: Hidetoshi Shimodaira <shimo@is.titech.ac.jp>
+Maintainer: Hidetoshi Shimodaira <shimo@i.kyoto-u.ac.jp>
 
 I thank Paul A. Sheridan for his comments to improve the manual pages.
 }

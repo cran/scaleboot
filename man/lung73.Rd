@@ -84,7 +84,7 @@ Suzuki, R. and Shimodaira, H. (2006).
 pvclust: An R package for hierarchical clustering with p-values,
 \emph{Bioinformatics}, 22, 1540-1542 (software is available from
 CRAN or
-\url{http://www.is.titech.ac.jp/~shimo/prog/pvclust/}).
+\url{http://stat.sys.i.kyoto-u.ac.jp/prog/pvclust/}).
 }
 \seealso{\code{\link{sbpvclust}}, \code{\link{sbfit.pvclust}}}
 
@@ -102,7 +102,7 @@ lung73.sb <- sbfit(lung73.pvclust) # model fitting
 \dontrun{
 ## Parallel version of the above script
 ## parPvclust took 80 mins using 40 cpu's
-library(snow)
+library(parallel)
 library(pvclust)
 data(lung)
 cl <- makeCluster(40) # launch 40 cpu's
@@ -115,11 +115,9 @@ lung73.sb <- sbfit(lung73.pvclust,cluster=cl) # model fitting
 data(lung73)
 lung73.new <- sbpvclust(lung73.pvclust,lung73.sb) # au <- k.3
 
-\dontrun{
 library(pvclust)
 plot(lung73.new) # draw dendrogram with the new au/bp values
 pvrect(lung73.new)
-}
 
 ## diagnose edges 61,...,69
 lung73.sb[61:69] # print fitting details

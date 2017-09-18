@@ -20,7 +20,10 @@ sbpsi.sphe(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE)
 
 sbpsi.generic(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE,zfun,eps=0.01)
 
-sbmodelnames(m=1:3,one.sided=TRUE,two.sided=FALSE,rev.sided=FALSE,poly,sing,poa,pob,sia,sib,sphe)
+sbmodelnames(m=1:3,one.sided=TRUE,two.sided=FALSE,rev.sided=FALSE,
+  poly,sing,poa,pob,poc,pod,sia,sib,sic,sid,sphe,pom,sim)
+
+
 }
 \arguments{
   \item{beta}{numeric vector of parameters;
@@ -45,8 +48,14 @@ sbmodelnames(m=1:3,one.sided=TRUE,two.sided=FALSE,rev.sided=FALSE,poly,sing,poa,
   \item{sphe}{maximum number of parameters in sphe models.}
   \item{poa}{maximum number of parameters in poa models.}
   \item{pob}{maximum number of parameters in pob models.}
+  \item{poc}{maximum number of parameters in poc models.}
+  \item{pod}{maximum number of parameters in pod models.}
   \item{sia}{maximum number of parameters in sia models.}
   \item{sib}{maximum number of parameters in sib models.}
+  \item{sic}{maximum number of parameters in sic models.}
+  \item{sid}{maximum number of parameters in sid models.}
+  \item{pom}{maximum number of parameters in pom models.}
+  \item{sim}{maximum number of parameters in sim models.}
 }
 \details{
   For \eqn{k=1}, the \code{sbpsi} functions return their \eqn{\psi} function
@@ -62,8 +71,7 @@ sbmodelnames(m=1:3,one.sided=TRUE,two.sided=FALSE,rev.sided=FALSE,poly,sing,poa,
   for \eqn{m\ge3} and \eqn{0\le\beta_{m-1}\le1}.
   \code{sbpsi.sphe} defines the spherical model; currently the number of
   parameters must be $m=3$.
-  \code{sbpsi.generic} is to calculate psi value and extrapolation from
-  a given z-function.
+  \code{sbpsi.generic} is a generic sbpsi function for specified \code{zfun}.
 
   For \eqn{k>1}, the \code{sbpsi} functions return values extrapolated at
   \eqn{\sigma^2=\sigma_p^2} using derivatives up to order \eqn{k-1}

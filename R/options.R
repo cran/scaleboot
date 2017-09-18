@@ -23,15 +23,21 @@
 
 ## model names
 sbmodelnames <- function(m=1:3,one.sided=TRUE,two.sided=FALSE,rev.sided=FALSE,
-                         poly,sing,poa,pob,sia,sib,sphe){
+                         poly,sing,poa,pob,poc,pod,sia,sib,sic,sid,sphe,pom,sim){
   if(missing(poly)) poly <- if(one.sided) m else 0
   if(missing(sing)) sing <- if(one.sided) m else 0
   if(missing(poa)) poa <- if(two.sided) m else 0
   if(missing(sia)) sia <- if(two.sided) m else 0
   if(missing(pob)) pob <- if(rev.sided) m else 0
   if(missing(sib)) sib <- if(rev.sided) m else 0
+  if(missing(poc)) poc <- if(two.sided) m else 0
+  if(missing(sic)) sic <- if(two.sided) m else 0
+  if(missing(pod)) pod <- if(rev.sided) m else 0
+  if(missing(sid)) sid <- if(rev.sided) m else 0
 #  if(missing(sphe)) sphe <- if(one.sided) m else 0
   if(missing(sphe)) sphe <- 0
+  if(missing(pom)) pom <- 0
+  if(missing(sim)) sim <- 0
 
   make1 <- function(na,mm,min=1,max=Inf) {
     k <- mm[mm>=min & mm<=max]
@@ -48,17 +54,34 @@ sbmodelnames <- function(m=1:3,one.sided=TRUE,two.sided=FALSE,rev.sided=FALSE,
   pob1k <- make1("pob1",pob,2)
   pob2k <- make1("pob2",pob,4)
 
+  poc1k <- make1("poc1",poc,2)
+  poc2k <- make1("poc2",poc,4)
+  pod1k <- make1("pod1",pod,2)
+  pod2k <- make1("pod2",pod,4)
+
   ## two sided models (singular-difference)
   sia1k <- make1("sia1",sia,4)
   sia2k <- make1("sia2",sia,5)
   sib1k <- make1("sib1",sib,4)
   sib2k <- make1("sib2",sib,5)
 
+  sic1k <- make1("sic1",sic,4)
+  sic2k <- make1("sic2",sic,5)
+  sid1k <- make1("sid1",sid,4)
+  sid2k <- make1("sid2",sid,5)
+
+  ## modified models
+#  sim0k <- make1("sim0",sim,3,3)
+  pomk <- make1("pom",pom,3)
+  simk <- make1("sim",sim,4)
+
   ## specialized models
   sphek <- make1("sphe",sphe,3,3)
 
   ## output model names
-  c(polyk,singk,poa1k,poa2k,pob1k,pob2k,sia1k,sia2k,sib1k,sib2k,sphek)
+  c(polyk,singk,pomk,simk,sphek,
+    poa1k,poa2k,pob1k,pob2k,sia1k,sia2k,sib1k,sib2k,
+    poc1k,poc2k,pod1k,pod2k,sic1k,sic2k,sid1k,sid2k)
 }
 
 ## default options (local variable)
@@ -72,6 +95,8 @@ sbmodelnames <- function(m=1:3,one.sided=TRUE,two.sided=FALSE,rev.sided=FALSE,
   ## poly model
   mag.poly = c(1,0.1,0.01,0.001), # mag factor for par in poly model
   omg.poly = c(0.1,1,1,1), # weights
+  low1.poly = c(-10,-10,-10), # lower limits 
+  upp1.poly = c(10,10,10), # upper limits 
   ## sing model
   mag1.sing = 0.1, # mag factor for singularity parameter
   omg1.sing = 1.0, # weight 
@@ -81,10 +106,19 @@ sbmodelnames <- function(m=1:3,one.sided=TRUE,two.sided=FALSE,rev.sided=FALSE,
   chisq.sphe = FALSE, # use chisq for pvalues instead of extrapolation for k >= 2
   ## dif parms of poa and pob models
   mag1.poa = c(1,0.1),  # mag factor for dif parm
-  low1.poa = c(1,-3), # lower limits of dif parm
-  upp1.poa = c(7,3), # upper limits of dif parm
-  trg1.poa = c(10,0), # targets of dif parm
-  omg1.poa = c(1,1), # weights of dif parm
+  low1.poa = c(0.01,-3), # lower limits of dif parm
+  upp1.poa = c(10,3), # upper limits of dif parm
+  trg1.poa = c(12,0), # targets of dif parm
+  omg1.poa = c(0.1,1.0), # weights of dif parm
+  ## sim model
+  mag1.sim = 0.1,  # mag factor for sim parm
+  omg1.sim = 1.0,  # weight
+  ## pom model
+  mag1.pom = 0.1,  # mag factor for pom parm
+  omg1.pom = 1.0,  # weight
+  ## switch
+  cor.pom = TRUE,  # change the method
+  
   ## print parameters
   percent = TRUE, # print p-values in percent
   digits.pval = 2, # significant digits for pvalue

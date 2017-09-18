@@ -63,3 +63,15 @@ S3method(print,relltest)
 S3method(sbfit, pvclust)
 export(sbpvclust)
 export(read.mt,read.ass,read.cnt)
+
+### R CMD check says:
+  importFrom("grDevices", "n2mfrow")
+  importFrom("graphics", "abline", "layout", "legend", "lines",
+             "matlines", "matplot", "matpoints", "par", "plot", "points")
+  importFrom("stats", "coef", "dnorm", "lsfit", "median", "optim",
+             "optimize", "pchisq", "pnorm", "qnorm", "quantile",
+             "rmultinom")
+### additional
+importFrom("parallel", "parLapply")
+importFrom("mvtnorm", "pmvnorm")
+

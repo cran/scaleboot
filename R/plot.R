@@ -32,6 +32,7 @@ plot.scaleboot <- function(x,
                        select=NULL,
                        sort.by=c("aic","none"),
                        k=NULL,s=NULL,sp=NULL,lambda=NULL,
+                       bpk=NULL,
                        ## parameters for x-y axises
                        xval=c("square","inverse","sigma"),
                        yval=c("psi","zvalue","pvalue"),
@@ -78,7 +79,6 @@ plot.scaleboot <- function(x,
     if(is.numeric(models)) models <- names(x$fi)[models]
   }
 
-  
   ## specify select for extrapolation
   if(!is.null(k) && length(models)>0) {
     a <- aic[models] - min(aic[models])
@@ -121,7 +121,12 @@ plot.scaleboot <- function(x,
   ## p : psi-value
   ## yfun(p,s) : conversion p -> y
   yval <- match.arg(yval)
-  if(yval=="zvalue") {
+  if(!is.null(bpk)) { #for 2-step bootstrap probabilities
+    if(bpk>=2) x$bp <- x$bpm[bpk-1,] # alter the bp values
+    ylab0 <- paste("Bootstrap Probability : k =",bpk)
+    yfun <- function(p,s) pnorm(-p/sqrt(s))
+    k <- NULL
+  } else if(yval=="zvalue") {
     ylab0 <- expression(z(sigma^2))
     yfun <- function(p,s) p/sqrt(s)
   } else if(yval=="pvalue") {
@@ -157,7 +162,7 @@ plot.scaleboot <- function(x,
     for(i in seq(along=models)) {
       f <- x$fi[[models[i]]]
       beta <- f$par*f$mag      
-      psi <- get(f$psi)      
+      psi <- sbpsiget(f$model)      
       for(j in seq(along=k)) 
         zex[j,i] <- psi(beta,s=s,k=k[j],sp=sp,lambda=lambda)
     }
@@ -200,7 +205,7 @@ plot.scaleboot <- function(x,
              length.x=length.x,col=col,lty=lty,lwd=lwd)
 
   ## lines
-  z2 <- lines(x,z1,models=models,k=k,s=s,sp=sp,lambda=lambda)
+  z2 <- lines(x,z1,models=models,k=k,s=s,sp=sp,lambda=lambda,bpk=bpk)
 
 
   ## legend
@@ -223,6 +228,7 @@ plot.summary.scaleboot <-
 lines.scaleboot <- function(x,z,
                         models=names(x$fi),
                         k=NULL,s=NULL,sp=NULL,lambda=NULL,
+                        bpk=NULL,
                         length.x=z$length.x,
                         col=z$col,lty=z$lty,lwd=z$lwd,...
                         ) {
@@ -240,6 +246,20 @@ lines.scaleboot <- function(x,z,
   sa <- z$xinv(xx)
   u1 <- sa >= 0  # for psi function
   u2 <- sa <= s  # for extraplolation
+  if(!is.null(bpk)) { ## tentative...
+    v1 <- which(u1)
+    sam <- sa
+    for(i in seq(along=sa)) {
+      ## find x$sa[j] closest to sa[i]
+      a <- Inf
+      for(j in seq(along=x$sa)) {
+        b <- abs(sa[i] - x$sa[j])
+        if(b<a) { a <- b; j0 <- j}
+      }
+      ## use the x$sam value at this j
+      sam[i] <- x$sam[j0]
+    }
+  }
   
   if(is.null(k)) {### fitting models (without extrapolations)
     yy <- matrix(0,length(xx),length(models))
@@ -248,9 +268,15 @@ lines.scaleboot <- function(x,z,
       f <- x$fi[[models[i]]]
       if(!is.null(f)) {
         beta <- f$par*f$mag
-        psi <- get(f$psi)
-        py <- sapply(sa[u1],function(s) psi(beta,s))
-        yy[u1,i] <- z$yfun(py,sa)
+        if(is.null(bpk)) {
+          psi <- sbpsiget(f$model)
+          py <- sapply(sa[u1],function(s) psi(beta,s))
+          yy[u1,i] <- z$yfun(py,sa)
+        } else {
+          prb <- sbprbget(f$model)
+          for(j in seq(along=v1))
+            yy[v1[j],i] <-  prb(beta,sa[v1[j]],sam[v1[j]])[bpk]
+        }
       }
     }
     labels <- models
@@ -264,7 +290,7 @@ lines.scaleboot <- function(x,z,
     for(i in seq(along=models)) {
       f <- x$fi[[models[i]]]
       beta <- f$par*f$mag
-      psi <- get(f$psi)
+      psi <- sbpsiget(f$model)
       yy1[,i] <- sapply(sa[u1],function(s0) psi(beta,s0))
       for(j in seq(along=k)) {
         yy2[,j,i] <- sapply(sa[u2],function(s1)
@@ -301,10 +327,10 @@ lines.scaleboot <- function(x,z,
 sblegend <- function(x="topright",y=NULL,z,inset=0.1,...) {
   if(length(z)==1) z <- z[[1]]
   if(is.null(z$labels)) return(invisible(NULL))
-  lty <- rep(z$lty,length=length(z$labels))
-  pch <- rep(z$pch,length=length(z$labels))
   if(is.null(do.lines <- z$do.lines)) do.lines <- F 
   if(is.null(do.points <- z$do.points)) do.points <- F
+  if(do.lines) lty <- rep(z$lty,length=length(z$labels))
+  if(do.points) pch <- rep(z$pch,length=length(z$labels))
   if(do.lines && ! do.points) 
     legend(x,y,z$labels,col=z$col,lwd=z$lwd,lty=lty,inset=inset,...)
   else if(!do.lines &&  do.points) 

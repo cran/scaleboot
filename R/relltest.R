@@ -131,7 +131,7 @@ scaleboot.node <- function(dat,nb,nsizes,fun,parm,count,weight) {
                      as.vector(rmultinom(1,nsize2,w0)),parm)
     } else { ## resampling indices
       for(j in seq(length=nb[i])) y[[j]] <- fun(dat,
-                     sample(nsize,nsize2,rep=T),parm)
+                     sample(nsize,nsize2,replace=T),parm)
     }
     if(count) {
       y <- apply(trmat(simplist(y)),2,sum)
