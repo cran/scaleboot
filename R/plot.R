@@ -49,13 +49,12 @@ plot.scaleboot <- function(x,
                        ## points
                        pch=1,cex=1,pt.col=col[1],pt.lwd=lwd[1],
                        ## legend
-                       legend.x=NULL, inset=0.1,
+                       legend.x=NULL, inset=0.1, cex.legend=1,
                        ...
                        ) {
 
   ## option
   op <- sboptions()
-
   ## check log
   if(length(log.xy) && log.xy != "") a <- strsplit(log.xy,"")[[1]] else a <- ""
   xlog <- "x" %in% a
@@ -209,7 +208,7 @@ plot.scaleboot <- function(x,
 
 
   ## legend
-  if(!is.null(legend.x)) sblegend(legend.x,z=c(z1,z2),inset=inset)
+  if(!is.null(legend.x)) sblegend(legend.x,z=c(z1,z2),inset=inset,cex=cex.legend)
 
   invisible(c(z1,z2))
 }
@@ -311,8 +310,7 @@ lines.scaleboot <- function(x,z,
       yy[u1,1] <- z$yfun(yy1,sa[u1]) # fitting
       yy[u2,-1] <- z$yfun(yy2,1) # extrapolation
     }
-#    browser()
-    labels <- paste("k",k,sep=".")
+    labels <- c("fitting", paste("k",k,sep="."))
   }
 
   if(!all(is.na(yy))) matlines(xx,yy,col=col,lty=lty,lwd=lwd)
@@ -364,3 +362,68 @@ plot.scalebootv <- function(x,models=attr(x,"models"),sort.by="none",...) {
 plot.summary.scalebootv <- function(x, select="average",...)
   plot.scalebootv(x,select=select,...)
 
+
+##
+## plot (beta0,beta1)
+##
+##  x is M times 2 matrix  with beta[,1] is beta0 and  beta[,2] is beta1
+##
+sbplotbeta <- function(beta, p=0.05, col.contour=c("blue","red","green"),
+                     drawcontours = TRUE, drawlabels = TRUE,
+                     labcex=1,length=100, cex=1, col="black",
+                     xlim=NULL, ylim=NULL, lim.countourexpand=0) {
+  
+  
+  beta0 <- beta[,1]; beta1 <-  beta[,2]; na <- rownames(beta);
+  if(is.null(xlim)) xlim <- range(c(0,beta0),na.rm=TRUE)
+  if(is.null(ylim)) ylim <- range(c(0,beta1),na.rm=TRUE)
+  plot(0,0,xlim=xlim,ylim=ylim,type="n",xlab="beta0", ylab="beta1")
+  abline(h=0, lty=2)
+  abline(v=0, lty=2)  
+  
+  if(drawcontours) {
+    calc_bp <- function(v,c) pnorm(-v-c)
+    calc_au <- function(v,c) pnorm(-v+c)
+    calc_sia <- function(v,c) 1 - pnorm(v-c)/pnorm(-c)  # region=alternative
+    calc_sin <- function(v,c) pnorm(-v+c)/pnorm(c)  # region=null
+    calc_all <- function(v,c) {
+      ans <- c(calc_bp(v,c),calc_au(v,c),calc_sia(v,c), calc_sin(v,c))
+      names(ans) <- c("bp","au","sia","sin")
+      ans
+    }
+    expandlim <- function(lim) {
+      add <- (lim[2]-lim[1])*lim.countourexpand
+      lim[1] <- lim[1] - add
+      lim[2] <- lim[2] + add
+      lim
+    }
+    xlim <- expandlim(xlim)
+    ylim <- expandlim(ylim)
+    vv <- seq(xlim[1],xlim[2],length=length)
+    cc <- seq(ylim[1],ylim[2],length=length)
+    vc <- as.matrix(expand.grid(vv,cc))
+    pp <- apply(vc,1,function(x) calc_all(x[1],x[2]))
+    vz =  matrix(apply(vc,1,function(x) x[1]),length(vv),length(cc))
+    cz =  matrix(apply(vc,1,function(x) x[2]),length(vv),length(cc))
+    bpz = matrix(pp["bp",],length(vv),length(cc))
+    auz = matrix(pp["au",],length(vv),length(cc))
+    siaz = matrix(pp["sia",],length(vv),length(cc))
+    sinz = matrix(pp["sin",],length(vv),length(cc)) 
+    
+    contour(vv,cc,bpz, levels = p, drawlabels=drawlabels,
+            labels=paste("bp =",p), labcex=labcex,col=col.contour[3],add=T)
+    contour(vv,cc,auz, levels = p, drawlabels=drawlabels,
+            labels=paste("au =",p), labcex=labcex,col=col.contour[2],add=T)
+    contour(vv,cc,sinz, levels = p, drawlabels=drawlabels,
+            labels=paste("si =",p), labcex=labcex,col=col.contour[1],add=T)
+    contour(vv,cc,bpz, levels = 1-p, drawlabels=drawlabels,
+            labels=paste("bp =",1-p), labcex=labcex,col=col.contour[3],add=T)
+    contour(vv,cc,auz, levels = 1-p, drawlabels=drawlabels,
+            labels=paste("au =",1-p), labcex=labcex,col=col.contour[2],add=T)
+    contour(vv,cc,siaz, levels = 1-p, drawlabels=drawlabels,
+            labels=paste("si =",1-p), labcex=labcex,col=col.contour[1],add=T)
+  }
+  
+  text(beta0, beta1, na, cex=cex, col=col)
+  invisible(list(beta0=vv,beta1=cc,pvalue=pp))
+}

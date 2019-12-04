@@ -9,22 +9,28 @@
 }
 \usage{
 
-\method{summary}{scaleboot}(object,models=names(object$fi),k=3,s=1,sp=-1,
+\method{summary}{scaleboot}(object,models=names(object$fi),k=3,sk=k,s=1,sp=-1,
+              hypothesis=c("auto","null","alternative"),
               type=c("Frequentist","Bayesian"),...)
 
-\method{summary}{scalebootv}(object,models=attr(object,"models"),k=3,type="Frequentist",...)
+\method{summary}{scalebootv}(object,models=attr(object,"models"),k=3,sk=k,
+              hypothesis="auto",type="Frequentist", select="average",...)
 
 \method{print}{summary.scaleboot}(x,sort.by=c("aic","none"),verbose=FALSE,...)
 
-\method{print}{summary.scalebootv}(x,select="average",sort.by=NULL,nochisq=TRUE,...)
+\method{print}{summary.scalebootv}(x,...)
 }
 \arguments{
   \item{object}{an object used to select a method. }
   \item{models}{character vector of model names. If numeric,
     \code{names(object$fi)[models]} is used for each \code{"scaleboot"} object.}
   \item{k}{numeric vector of \eqn{k} for calculating p-values.}
+  \item{sk}{numeric vector of \eqn{k} for calculating selective inference p-values.}
   \item{s}{\eqn{\sigma_0^2}}
   \item{sp}{\eqn{\sigma_p^2}}
+  \item{hypothesis}{specifies type of selective infernece.
+  "null" takes the region as null hypothesis, and "alternative" takes the region as alternative hypothesis.
+  "auto" determins it by the sign of beta0. The selectice pvalues (\code{sk.1}, \code{sk.2}, ...) are selective pvalues when "null", and they are one minus selective pvalues when "alternative".}
   \item{type}{If numeric, it is passed to \code{sbpsi} functions as
     \code{lambda} to specify p-value type. If "Frequentist" or
     "Bayesian", then equivalent to specifying \code{lambda} = 1 or 0,
@@ -35,7 +41,6 @@
   \item{x}{object.}
   \item{sort.by}{sort key.}
   \item{verbose}{logical.}
-  \item{nochisq}{logical.}
   \item{...}{further arguments passed to and from other methods.}  
 }
 
@@ -63,6 +68,10 @@ The p-values are justified only for good fitting models. By default,
 the model which minimizes the AIC value is selected. We can modify the
 AIC value by using the \code{sbaic} function. We also diagnose the
 fitting by using the \code{plot} method.
+
+Now includes selective inference p-values.
+The method is described in Terada and Shimodaira (2017; arXiv:1711.00949)
+"Selective inference for the problem of regions via multiscale bootstrap".
 }
 \value{
   \code{summary.scaleboot} returns
@@ -72,9 +81,17 @@ fitting by using the \code{plot} method.
   \item{pv}{matrix of p-values of size \code{length(models)} *
     \code{length(k)} with elements \eqn{p_k}.}
   \item{pe}{matrix of standard errors of p-values.}
+  \item{spv}{matrix of selective inference p-values of size \code{length(models)} *
+    \code{length(sk)} with elements \eqn{sp_k}.}
+  \item{spe}{matrix of standard errors of selective inference p-values.}
+  \item{betapar}{list array containing (beta0, beta1) and its covariance matrix
+        for each model. They are obtained by linear extrapolation.
+        This will be used for interpreting the fitting in terms of signed distance and curvature.}
   \item{best}{ a list consisting of components \code{model} for the best
-  fitting model name, \code{aic} for its AIC value, \code{pv} for a
-  vector of p-values, and \code{pe} for a vector of standard errors.}
+  fitting model name, \code{aic} for its AIC value, \code{pv} and \code{spv} for 
+  vector of p-values, and \code{pe} and \code{spe} for vectors of standard errors.
+  Also includes \code{betapar} for the best model.}
+  \item{average}{ a list of results for the average model computed by Akaike weight.}
   \item{parex}{a list of components \code{k}, \code{s}, and \code{sp}.}
 }
 \author{Hidetoshi Shimodaira}

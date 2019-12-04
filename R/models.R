@@ -617,6 +617,19 @@ sbpsi.generic <- function(beta,s=1,k=1,sp=-1,lambda=NULL,aux=NULL,check=FALSE,zf
   y
 }
 
+#####################################################################################
+###
+###  EXPERIMENTAL CODE FOR DIFFERENCE MODELS
+###
+###  Shimodaira (2010)
+###  Ann Inst Stat Math (2010) 62:189-208 DOI 10.1007/s10463-009-0247-z
+###  Frequentist and Bayesian measures of confidence via multiscale
+###     bootstrap for testing three regions
+###
+###  Note: There are so many addition to the whole code about this experimental features
+###        These parts many be removed in future.
+###        They can be identified by keywords such as twosided, onesided, revsided, lambda
+###        In particular, parameter "lambda" is not used in most of model sepecifications.
 ########################################
 ##
 ## models with finite depth
@@ -884,6 +897,10 @@ sbprb.sid1 <- function(beta,s=1,sm=NULL,check=FALSE)
 sbprb.sid2 <- function(beta,s=1,sm=NULL,check=FALSE)
   sbprb.twosided(sbpsisia,k1=2,typea=FALSE,typec=TRUE,beta,s,sm,check)
 
+###
+###  END OF EXPERIMENTAL CODE FOR DIFFERENCE MODELS
+###
+#####################################################################################
 
 ######################################################################
 ### INTERNAL: MODEL INITIAL VALUES

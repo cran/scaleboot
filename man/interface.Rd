@@ -48,7 +48,8 @@ sbpvclust(x,mbs,k=3,select="average",...)
    Functions for interface to pvclust are: \code{sbfit} method for an
    object of class \code{"pvclust"} to convert it to \code{"scalebootv"} class,
    and \code{sbpvclust} for writing back the result to a
-   \code{"pvclust"} object.
+   \code{"pvclust"} object with additional class \code{"sbclust"}.
+   \code{plot} method for class \code{"sbclust"} overwrites that for \code{"pvclust"}.
  }
 \value{
   \code{read.mt} returns a matrix of dimension sequence-length by tree-number.
@@ -62,8 +63,7 @@ sbpvclust(x,mbs,k=3,select="average",...)
 
   \code{sbfit.pvclust} returns an object of class
   \code{"scalebootv"}. \code{sbpvclust} returns an object of class
-  \code{"pvclust"}.
-
+  \code{"sbclust"} added to the class \code{"pvclust"}.
 }
 \references{
 Shimodaira, H. and Hasegawa, M. (2001). CONSEL: for
@@ -79,16 +79,6 @@ pvclust: An R package for hierarchical clustering with p-values,
 \author{Hidetoshi Shimodaira}
 \seealso{\code{\link{lung73}}, \code{\link{mam15}}, \code{\link{relltest}}}
 \examples{
-
-\dontrun{
-## reading CONSEL files
-## sample files are found in mam15 subdirectory
-## see help(mam15) for details
-mam15.mt <- read.mt("mam15.mt")
-mam15.ass <- read.mt("mam15.ass")
-mam15.cnt <- read.mt("mam15.cnt")
-}
-
 ## replace au/bp entries in pvclust object
 ## see help(lung73) for details
 library(pvclust)
@@ -98,6 +88,16 @@ pvrect(lung73.pvclust)
 lung73.new <- sbpvclust(lung73.pvclust,lung73.sb) # au <- k.3
 plot(lung73.new) # redraw dendrogram with the new au/bp values
 pvrect(lung73.new)
+
+\dontrun{
+## reading CONSEL files
+## sample files are found in mam15 subdirectory
+## see help(mam15) for details
+mam15.mt <- read.mt("mam15.mt")
+mam15.ass <- read.ass("mam15.ass")
+mam15.cnt <- read.cnt("mam15.cnt")
+}
+
 }
 \keyword{ file }
 

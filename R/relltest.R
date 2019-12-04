@@ -233,15 +233,20 @@ relltest <- function(dat,nb=10000,sa=9^seq(-1,1,length=13),
   ans    
 }
 
-
-print.relltest <- function(x,...) {
+formatting.relltest <- function(x,...) {
   mycatpval <- function(x) catpval(x$pv,x$pe)$value
   y <- cbind(myformat(c(pi,attr(x,"stat")),digits=2)[-1],
              mycatpval(attr(x,"shtest")))
-  colnames(y) <- c("stat","shtest")
-  cat("\nTest Statistic, and Shimodaira-Hasegawa test:\n")
-  catmat(y)
+  z <- cbind(attr(x,"stat"),attr(x,"shtest")$pv)
+  colnames(z) <- colnames(y) <- c("stat","shtest")
+  head <- "Test Statistic, and Shimodaira-Hasegawa test"
+  list(character=y, head=head, value=z)
+}
 
+print.relltest <- function(x,...) {
+  tab <- formatting.relltest(x,...)
+  cat("\n",tab$head,"\n",sep="")
+  catmat(tab$character)
   NextMethod("print")
 }
 

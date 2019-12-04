@@ -3,30 +3,43 @@
 \alias{mam15.relltest}
 \alias{mam15.mt}
 \alias{mam15.ass}
+\alias{mam15.aux}
+\alias{mam105}
+\alias{mam105.relltest}
+\alias{mam105.mt}
+\alias{mam105.ass}
+\alias{mam105.aux}
+\alias{mam26}
+\alias{mam26.mt}
+\alias{mam26.ass}
+\alias{mam26.aux}
 \docType{data}
-\title{Mammal Phylogenetic Analysis for 15 Trees}
+\title{Mammal Phylogenetic Analysis for 15 trees}
 \description{
-  Phylogenetic analysis of six mammal species for 15 trees.
+  Phylogenetic analysis of six mammal species for 15 trees and 105 trees.
 }
 \usage{
 data(mam15)
-
-mam15.mt
-
-mam15.ass
-
-mam15.relltest
 }
 \format{
   mam15.mt is a matrix of size 3414 * 15.  The (i,j) element is the
   site-wise log-likelihood value at site-i for tree-j for i=1,...,3414,
-  and j=1,...,15.
+  and j=1,...,15. They are constrained trees with clade (cow, seal) being fixed.
 
   mam15.ass is a list of length 25 for association vectors. The
   components are t1, t2, ..., t15 for trees, and e1, e2, ..., e10 for
   edges.
 
   mam15.relltest is an object of class \code{"relltest"} of length 25.
+  
+  mam15.aux is a list of tree topologies (tpl), clade patterns (cld), taxa names(tax).
+  
+  mam105.mt, mam105.ass, mam105.relltst, mam105.aux are those for
+  105 unconstrained trees.
+  
+  mam26.mt, mam26.ass, mam26.aux are those for 26 trees including
+  the 15 constrained trees, 10 partially resolved trees corresponding to 
+  the 10 internal edges, and the star topology.
 }
 \details{
   An example of phylogenetic analysis of six mammal species:
@@ -324,7 +337,7 @@ Best Model:  sing.3
   maximum likelihood, \emph{Computer Applications in BioSciences},
   13:555-556 (software is available from
   \url{http://abacus.gene.ucl.ac.uk/software/paml.html}).
-  
+
   Shimodaira, H. and Hasegawa, M. (2001). CONSEL: for assessing the
   confidence of phylogenetic tree selection, \emph{Bioinformatics}, 17,
   1246-1247 (software is available from
